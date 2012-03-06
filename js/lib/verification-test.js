@@ -13,7 +13,7 @@ var fields = {
 			};
 
 try {
-	var status = verification.verify(data, fields, true);
+	var status = verification.verify(data, fields, false);
 } catch (e) {
 	console.log(e);
 } finally {

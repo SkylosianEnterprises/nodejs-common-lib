@@ -1,3 +1,12 @@
+/**
+ * Verification library to validate a set of rules against a data object
+ *
+ * THIS IS RUN IN THE BROWSER
+ * Do not put any proprietary/sensitive code in here
+ * Do not use trailing commas
+ * Do not use any other ECMAScript 5 syntax
+ */
+
 var _defaultExpression = exports._defaultExpression = function(type){
 	switch(type){
 		case 'alpha':
