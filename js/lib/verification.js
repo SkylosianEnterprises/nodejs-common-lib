@@ -32,15 +32,19 @@ var verify = exports.verify = function(data, rules, throwExceptions){
 	var rtn = { error: false, errors: [], fields: {}, badFields: [] };
 	var throwExceptions = typeof throwExceptions == 'undefined' ? false : (throwExceptions ? true : false); // Throws up individual exceptions instead of gathering them all into a big array
 
+	// Iterate all the defined rules
 	for(var i in rules){
-		var rule = rules[i];
-		var values = data[i];
+		// i = field name
+		var rule = rules[i]; // Field rule
+		var values = data[i]; // Field value
 
-		// If it should be an array but it doesn't exist, treat it as an empty array
+		// Munge the data into an array no matter what it is, to make it easier to work with
 		if(rule.array && (!data[i] || typeof data[i] == 'undefined')){
+			// If it should be an array but it doesn't exist, treat it as an empty array
 			values = [];
 		}else if(!rule.array){
-			values = [ data[i] ]; // If it's not an array, treat it like one anyway so we can just iterate over everything
+			// If it's not an array, treat it like one anyway so we can just iterate over everything
+			values = [ data[i] ];
 		}else if(rule.array && !(data[i] instanceof Array)){
 			// It should be an array but it's not
 			var e = { type: 'InvalidField', field: i, message: 'Field ' + i + ' was supposed to be an array but its not' };
@@ -59,6 +63,7 @@ var verify = exports.verify = function(data, rules, throwExceptions){
 			if(throwExceptions) throw e;
 		}
 
+		// Now that we have an array of values (even for fields with only a single value), iterate them and check everything out
 		for(var v = 0; v < values.length; v++){
 			var value = values[v];
 			var fieldName = rule.array ? i + '[' + v + ']' : i;
@@ -87,7 +92,8 @@ var verify = exports.verify = function(data, rules, throwExceptions){
 							if(throwExceptions) throw e;
 						}
 					}
-					
+
+					// Field length checks
 					if(rule.minlength){
 						// The value should be an instanceof
 						if(value.length < rule.minlength){
@@ -97,7 +103,6 @@ var verify = exports.verify = function(data, rules, throwExceptions){
 							if(throwExceptions) throw e;
 						}
 					}
-
 					if(rule.maxlength){
 						// The value should be an instanceof
 						if(value.length > rule.maxlength){
@@ -108,6 +113,7 @@ var verify = exports.verify = function(data, rules, throwExceptions){
 						}
 					}
 
+					// Only specific values allowed
 					if(rule.enum){
 						// The value should be one of the given values in the array
 						if(!(rule.enum.indexOf(value) >= 0)){
@@ -118,7 +124,7 @@ var verify = exports.verify = function(data, rules, throwExceptions){
 						}
 					}
 
-					// If they passed the other checks, run matches and/or testers
+					// Custom tester functions
 					if(rule.tester && typeof rule.tester == 'function'){ // Custom testing function
 						var result = true;
 						try {
@@ -157,6 +163,7 @@ var verify = exports.verify = function(data, rules, throwExceptions){
 
 				}else{
 					// We probably won't ever get here because it doesn't iterate the data, it iterates the rules and then pulls the data for that rule
+					// Maybe we should still include the fields in the report?
 				}
 			}
 		}
@@ -167,7 +174,7 @@ var verify = exports.verify = function(data, rules, throwExceptions){
 	for(var i in rtn.fields){
 		if(rtn.fields[i] == false){
 			rtn.error = true;
-			rtn.badFields.push(i);
+			rtn.badFields.push(i); // Add the bad field to the list for another quick way of referencing
 		}
 	}
 
