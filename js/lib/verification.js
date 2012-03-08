@@ -117,9 +117,9 @@ var verify = exports.verify = function(data, rules, throwExceptions){
 					}
 
 					// Check the field's constructor
-					if(rule.constructor){
-						// The value should be an instanceof
-						if(!(value.constructor == rule.constructor)){
+					if(rule.hasOwnProperty('constructor')){
+						// The value should have a constructor of the given type
+						if(!(value.constructor == Object.getOwnPropertyDescriptor(rule, 'constructor').value /* Reference to the actual constructor property, not Object */)){
 							var message = 'Field ' + fieldName + ' was not constructed with ' + (typeof rule.constructor.nameOf == 'function' ? rule.constructor.nameOf() : 'the required constructor');
 							error(i, { type: 'InvalidConstructor', field: fieldName, message: message });
 						}
