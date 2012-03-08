@@ -85,15 +85,43 @@ var verify = exports.verify = function(data, rules, throwExceptions){
 					error(i, { type: 'RequiredField', field: fieldName, message: 'Required field ' + i + ' was ' + (value instanceof Array ? 'empty' : 'undefined') });
 				}
 			}else{
-				// We have a value, apply any rules against it
-				if(rule.type || rule.match || rule.tester || rule.instanceof || rule.enum || rule.maxlength || rule.minlength){ // This should be a list of all the supported rule types
+				// See if the rule structure defines this field as a subdocument -- if so run just those rules against just this field and roll it all up
+				if(rule.subdocument){
+					var rpt = verify(value, rule.subdocument, throwExceptions);
+					if(rpt.error){
+						rtn.fields[i] = false; // Something in this field failed, so mark that
+						// Sub-document had errors, roll the report up
+						for(var f in rpt.fields){
+							var n = i + (rule.array ? '[' + v + ']' : '') + '.' + f;
+							rtn.fields[n] = rpt.fields[f];
+						}
+						for(var e in rpt.errors){
+							// Update the references to include sub-document notation
+							var n = i + (rule.array ? '[' + v + ']' : '');
+							rpt.errors[e].field = n + '.' + rpt.errors[e].field;
+							rpt.errors[e].message = n + ': ' + rpt.errors[e].message;
+							error(rpt.errors[e].field, rpt.errors[e]);
+						}
+					}
+				}
 
-					if(rule.instanceof || rule.instancesof){
-						// The value should be an instanceof
+				// We have a value, apply any rules against it
+				if(rule.type || rule.match || rule.tester || rule.instanceof || rule.enum || rule.maxlength || rule.minlength || rule.constructor){ // This should be a list of all the supported rule types
+
+					// The value should be an instanceof
+					if(rule.instanceof){
 						if(!(value instanceof rule.instanceof)){
-							rtn.fields[i] = false;
 							var message = 'Field ' + fieldName + ' was not an instance of ' + (typeof rule.instanceof.nameOf == 'function' ? rule.instanceof.nameOf() : 'the required type');
 							error(i, { type: 'InvalidInstance', field: fieldName, message: message });
+						}
+					}
+
+					// Check the field's constructor
+					if(rule.constructor){
+						// The value should be an instanceof
+						if(!(value.constructor == rule.constructor)){
+							var message = 'Field ' + fieldName + ' was not constructed with ' + (typeof rule.constructor.nameOf == 'function' ? rule.constructor.nameOf() : 'the required constructor');
+							error(i, { type: 'InvalidConstructor', field: fieldName, message: message });
 						}
 					}
 
