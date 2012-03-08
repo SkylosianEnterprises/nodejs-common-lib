@@ -2,9 +2,10 @@
  * Verification library to validate a set of rules against a data object
  *
  * THIS IS RUN IN THE BROWSER
- * Do not put any proprietary/sensitive code in here
- * Do not use trailing commas
- * Do not use any other ECMAScript 5 syntax
+ * DO NOT put any proprietary/sensitive code in here
+ * DO NOT use trailing commas
+ * DO NOT use any other advanced ECMAScript magic (no get/set, no proxies, limited Object properties interaction, etc)
+ * DO Test it in IE
  */
 
 var _defaultExpression = exports._defaultExpression = function(type){
@@ -18,25 +19,40 @@ var _defaultExpression = exports._defaultExpression = function(type){
 		case 'numeric':
 			return /^[0-9\.\s\,]+/;
 		case 'email':
-			return /^[A-Za-z0-9\+\._\-]@[A-Za-z0-9\.\+]\.[A-Za-z0-9\.]{2,4}$/;
+			return /^[A-Za-z0-9\+\._\-]+@[A-Za-z0-9\.\+]+\.[A-Za-z0-9\.]{2,4}$/;
 		case 'name':
 			return /^[A-Za-z0-9\'\s]+$/;
 		case 'phone':
-			return /^[0-9\s\-\+\(\)]+$/;
+			return /^[0-9\s\-\+\(\)]{7,16}$/;
 		default:
 			return /.*/g;
 	}
 };
 
+// TODO: Break all these out
 var verify = exports.verify = function(data, rules, throwExceptions){
 	var rtn = { error: false, errors: [], fields: {}, badFields: [] };
 	var throwExceptions = typeof throwExceptions == 'undefined' ? false : (throwExceptions ? true : false); // Throws up individual exceptions instead of gathering them all into a big array
+
+	var error = function(field, e){
+		if(typeof field == 'object' && field.field){
+			// No specified field name, try to derive it from the error
+			e = field;
+			field = e.field;
+		}
+
+		rtn.fields[field] = false; // Set the field to false
+		rtn.errors.push(e); // Add the error to the list
+		if(throwExceptions) throw e; // Optionally throw the error as an exception
+	};
 
 	// Iterate all the defined rules
 	for(var i in rules){
 		// i = field name
 		var rule = rules[i]; // Field rule
 		var values = data[i]; // Field value
+
+		rtn.fields[i] = true; // Default to good status, then one-by-one check the rules and flip to false at any time
 
 		// Munge the data into an array no matter what it is, to make it easier to work with
 		if(rule.array && (!data[i] || typeof data[i] == 'undefined')){
@@ -47,20 +63,13 @@ var verify = exports.verify = function(data, rules, throwExceptions){
 			values = [ data[i] ];
 		}else if(rule.array && !(data[i] instanceof Array)){
 			// It should be an array but it's not
-			var e = { type: 'InvalidField', field: i, message: 'Field ' + i + ' was supposed to be an array but its not' };
-			if(throwExceptions) throw e;
-			rtn.errors.push(e);
+			error(i, { type: 'InvalidField', field: i, message: 'Field ' + i + ' was supposed to be an array but its not' });
 			values = [];
 		}
 
-		rtn.fields[i] = true; // Default to good status, then one-by-one check the rules and flip to false at any time
-
 		// Special check for empty arrays which weren't defined -- if it was required we just need to make sure it had at least one element
 		if( rule.array && ((data[i] instanceof Array && data[i].length == 0) || typeof data[i] == 'undefined') && rule.required ){
-			rtn.fields[i] = false;
-			var e = { type: 'RequiredField', field: i, message: 'Required field ' + i + ' was ' + (value instanceof Array ? 'empty' : 'undefined') };
-			rtn.errors.push(e);
-			if(throwExceptions) throw e;
+			error(i, { type: 'RequiredField', field: i, message: 'Required field ' + i + ' was ' + (value instanceof Array ? 'empty' : 'undefined') });
 		}
 
 		// Now that we have an array of values (even for fields with only a single value), iterate them and check everything out
@@ -69,14 +78,11 @@ var verify = exports.verify = function(data, rules, throwExceptions){
 			var fieldName = rule.array ? i + '[' + v + ']' : i;
 
 			// Read the rules declaration and parse all the generic things we have to check for, one by one, and throw up exceptions (or collect them in an array) wherever there are problems
-			// Exceptions should be in the form: { type: 'Type', field: i, message: 'Something descriptive that explains what was wrong with the field' }
+			// Exceptions should be in the form: { type: 'Type', field: fieldName, message: 'Something descriptive that explains what was wrong with the field' }
 			if(typeof value == 'undefined' || value == null || (value instanceof Array && value.length == 0)){
 				// No value, so let's see if it's required
 				if(rule.required){
-					rtn.fields[i] = false;
-					var e = { type: 'RequiredField', field: fieldName, message: 'Required field ' + i + ' was ' + (value instanceof Array ? 'empty' : 'undefined') };
-					rtn.errors.push(e);
-					if(throwExceptions) throw e;
+					error(i, { type: 'RequiredField', field: fieldName, message: 'Required field ' + i + ' was ' + (value instanceof Array ? 'empty' : 'undefined') });
 				}
 			}else{
 				// We have a value, apply any rules against it
@@ -87,9 +93,7 @@ var verify = exports.verify = function(data, rules, throwExceptions){
 						if(!(value instanceof rule.instanceof)){
 							rtn.fields[i] = false;
 							var message = 'Field ' + fieldName + ' was not an instance of ' + (typeof rule.instanceof.nameOf == 'function' ? rule.instanceof.nameOf() : 'the required type');
-							var e = { type: 'InvalidInstance', field: fieldName, message: message };
-							rtn.errors.push(e);
-							if(throwExceptions) throw e;
+							error(i, { type: 'InvalidInstance', field: fieldName, message: message });
 						}
 					}
 
@@ -97,19 +101,13 @@ var verify = exports.verify = function(data, rules, throwExceptions){
 					if(rule.minlength){
 						// The value should be an instanceof
 						if(value.length < rule.minlength){
-							rtn.fields[i] = false;
-							var e = { type: 'ValueLengthBelowExpectation', field: fieldName, message: 'Field ' + i + ' had a value whose length did not meet the minimum requirement: ' + rule.minlength };
-							rtn.errors.push(e);
-							if(throwExceptions) throw e;
+							error(i, { type: 'ValueLengthBelowExpectation', field: fieldName, message: 'Field ' + i + ' had a value whose length did not meet the minimum requirement: ' + rule.minlength });
 						}
 					}
 					if(rule.maxlength){
 						// The value should be an instanceof
 						if(value.length > rule.maxlength){
-							rtn.fields[i] = false;
-							var e = { type: 'ValueLengthExceeded', field: fieldName, message: 'Field ' + i + ' had a value whose length exceeded: ' + rule.maxlength };
-							rtn.errors.push(e);
-							if(throwExceptions) throw e;
+							error(i, { type: 'ValueLengthExceeded', field: fieldName, message: 'Field ' + i + ' had a value whose length exceeded: ' + rule.maxlength });
 						}
 					}
 
@@ -117,10 +115,7 @@ var verify = exports.verify = function(data, rules, throwExceptions){
 					if(rule.enum){
 						// The value should be one of the given values in the array
 						if(!(rule.enum.indexOf(value) >= 0)){
-							rtn.fields[i] = false;
-							var e = { type: 'InvalidValue', field: fieldName, message: 'Field ' + i + ' did not have a valid value' };
-							rtn.errors.push(e);
-							if(throwExceptions) throw e;
+							error(i, { type: 'InvalidValue', field: fieldName, message: 'Field ' + i + ' did not have a valid value' });
 						}
 					}
 
@@ -130,17 +125,12 @@ var verify = exports.verify = function(data, rules, throwExceptions){
 						try {
 							result = rule.tester(value, data, rules); // Pass the data and fields rules as context, in case some data relies on other fields
 						} catch(e) {
-							e = e.extend({field: i});
 							// Catch anything the tester threw up and aggregate it
-							rtn.fields[i] = false;
-							rtn.errors.push(e);
-							if(throwExceptions) throw e;
+							e = e.extend({field: fieldName});
+							error(i, e);
 						}
 						if(!result){
-							rtn.fields[i] = false;
-							var e = { type: 'TesterFailed', fieldName: fieldName, message: 'Field ' + i + ' was run against custom tester method, returned false' };
-							rtn.errors.push(e);
-							if(throwExceptions) throw e;
+							error(i, { type: 'TesterFailed', fieldName: fieldName, message: 'Field ' + i + ' was run against custom tester method, returned false' });
 						}
 					}
 
@@ -154,10 +144,7 @@ var verify = exports.verify = function(data, rules, throwExceptions){
 
 						// See if it matches the given expression
 						if(!new String(value).match(expression)){ // Cast as a string to prevent comparison errors
-							rtn.fields[i] = false;
-							var e = { type: 'MatchFailed', field: fieldName, message: 'Field ' + i + ', with given value "' + value + '" didnt match the following expression: ' + expression };
-							rtn.errors.push(e);
-							if(throwExceptions) throw e;
+							error(i, { type: 'MatchFailed', field: fieldName, message: 'Field ' + i + ', with given value "' + value + '" didnt match the following expression: ' + expression });
 						}
 					}
 
