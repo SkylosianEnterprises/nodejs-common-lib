@@ -139,9 +139,10 @@ var verify = exports.verify = function(data, rules, throwExceptions, path){
 				if(rule.type || rule.match || rule.tester || rule.instanceof || rule.enum || rule.maxlength || rule.minlength || rule.constructor){ // This should be a list of all the supported rule types
 
 					// The value should be an instanceof
-					if(rule.instanceof){
-						if(!(value instanceof rule.instanceof)){
-							var message = 'Field ' + fieldName + ' was not an instance of ' + (typeof rule.instanceof.nameOf == 'function' ? rule.instanceof.nameOf() : 'the required type');
+					if(rule.hasOwnProperty('instanceof')){
+						var iof = Object.getOwnPropertyDescriptor(rule, 'instanceof').value;
+						if(!(value instanceof iof)){
+							var message = 'Field ' + fieldName + ' was not an instance of ' + (typeof iof.nameOf == 'function' ? iof.nameOf() : 'the required type');
 							error(fieldPath, extend(e, { type: 'InvalidInstance', message: message }));
 						}
 					}
