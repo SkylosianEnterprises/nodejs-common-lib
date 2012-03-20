@@ -179,9 +179,10 @@ var verify = exports.verify = function(data, rules, throwExceptions, path){
 					}
 
 					// Only specific values allowed
-					if(rule.enum){
+					if(rule.hasOwnProperty('enum')){
+						var enm = Object.getOwnPropertyDescriptor(rule, 'enum').value;
 						// The value should be one of the given values in the array
-						if(!(rule.enum.indexOf(value) >= 0)){
+						if(!(enm.indexOf(value) >= 0)){
 							error(fieldPath, extend(e, { type: 'InvalidValue', message: 'Field ' + i + ' did not have a valid value' }));
 						}
 					}
