@@ -135,8 +135,16 @@ var verify = exports.verify = function(data, rules, throwExceptions, path){
 					}
 				}
 
+				// Make sure the rule contains at least one thing to test against
+				var ruleTypes = ['type', 'match', 'tester', 'instanceof', 'enum', 'maxlength', 'minlength', 'constructor'];
+				var valid = false;
+				for(var k in ruleTypes){
+					if(rule.hasOwnProperty(ruleTypes[k])){
+						valid = true;
+					}
+				}
 				// We have a value, apply any rules against it
-				if(rule.type || rule.match || rule.tester || rule.instanceof || rule.enum || rule.maxlength || rule.minlength || rule.constructor){ // This should be a list of all the supported rule types
+				if(valid){
 
 					// The value should be an instanceof
 					if(rule.hasOwnProperty('instanceof')){
