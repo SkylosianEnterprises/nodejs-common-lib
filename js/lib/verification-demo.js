@@ -8,10 +8,11 @@ var data = {
 	phone: '1-888-858-7777',
 	test: 'test',
 	fail: 'ff',
-//	group: [ null, {type: 'aa'}, {a: 55} ],
-	group: [{}, []],
+	group: [ new Date(), {type: 'aa'}, {a: 55} ],
+//	group: [{}, []],
 	single: { type: { id: 55 } },
 	bool: true,
+	nested: { a: { b: true } },
 };
 
 var fields = {
@@ -33,8 +34,10 @@ var fields = {
 							}
 						},
 				bool:	{ constructor: Boolean }, // check if: bool.constructor == Boolean
+				nested:	{ subdocument: { a: { required: true, subdocument: { b: { required: true, subdocument: {  } } } } } },
 			};
 
+console.dir(data);
 try {
 	var status = verification.verify(data, fields, false, 'a.b' /* fake context for all the variables to live inside*/);
 } catch (e) {

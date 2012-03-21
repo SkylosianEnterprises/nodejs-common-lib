@@ -110,27 +110,32 @@ var verify = exports.verify = function(data, rules, throwExceptions, path){
 			// Read the rules declaration and parse all the generic things we have to check for, one by one, and throw up exceptions (or collect them in an array) wherever there are problems
 			// Exceptions should be in the form: { type: 'Type', field: fieldName, path: fieldPath, message: 'Something descriptive that explains what was wrong with the field' }
 			// Or   extend(e, { type: 'Type', message: 'Friendly message' })   to derive the field and path parts automatically
-			if(typeof value == 'undefined' || value == null || (value instanceof Array && value.length == 0)){
-				// No value, so let's see if it's required
-				if(rule.required){
+			if(value == '' || typeof value == 'undefined' || value == null || (value instanceof Array && value.length == 0)){
+				// No value
+				// If it's required and not supposed to be a subdocument
+				if(rule.required && !rule.subdocument){
 					error(fieldPath, extend(e, { type: 'RequiredField', message: 'Required field ' + fieldName + ' was ' + (value instanceof Array ? 'empty' : 'undefined') }));
 				}
-				// Not required but it's supposed to be a subdocument
-				if(!rule.required && rule.subdocument){
+				// Required and it's supposed to be a subdocument
+				if(rule.required && rule.subdocument){
 					error(fieldPath, extend(e, { type: 'InvalidSubdocument', message: 'Field ' + fieldName + ' was expected to be a subdocument but was undefined' }));
 				}
 			}else{
 				// See if the rule structure defines this field as a subdocument -- if so run just those rules against just this field and roll it all up
 				if(rule.subdocument){
-					var rpt = verify(value, rule.subdocument, throwExceptions, fieldPath);
-					if(rpt.error){
-						// Sub-document had errors, roll the report up
-						for(var f in rpt.fields){
-							rtn.fields[f] = rpt.fields[f];
-						}
-						for(var e in rpt.errors){
-							// Update the references to include sub-document notation
-							rtn.errors.push(rpt.errors[e]);
+					if(typeof value != 'object' || value.constructor != Object){
+						error(fieldPath, extend(e, { type: 'InvalidSubdocument', message: 'Field ' + fieldName + ' was expected to be a subdocument but was not' }));
+					}else{
+						var rpt = verify(value, rule.subdocument, throwExceptions, fieldPath);
+						if(rpt.error){
+							// Sub-document had errors, roll the report up
+							for(var f in rpt.fields){
+								rtn.fields[f] = rpt.fields[f];
+							}
+							for(var e in rpt.errors){
+								// Update the references to include sub-document notation
+								rtn.errors.push(rpt.errors[e]);
+							}
 						}
 					}
 				}
