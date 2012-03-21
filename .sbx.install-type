@@ -1,2 +1,2 @@
 type: common-lib
-system_services: [ nodejs-member-service manta manta_cp ]
+system_services: [ nodejs-member-service, manta, manta_cp ]
