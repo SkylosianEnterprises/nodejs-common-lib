@@ -222,7 +222,7 @@ if (!Object.prototype.unserializeDates) {
 			}else if(typeof o == 'object'){
 				for(var k in o){
 					if(o[k] != null && typeof o[k] == 'object' && o[k]['$date'] && !isNaN(parseInt(o[k]['$date'], 10)) ){
-						var date = new Date(o[k]['$date']);
+						var date = new Date(parseInt(o[k]['$date'], 10));
 						o[k] = date;
 					}else if(o[k] != null && typeof o[k] == 'object' && !(o[k] instanceof Array)){
 						o[k].unserializeDates(level + 1);
