@@ -2,6 +2,26 @@
  * Augment the basic javascript types with some helper methods
  */
 
+if (!Object.prototype.isPlainObject) {
+	/**
+	 * Object.prototype.isObject(v)
+	 *
+	 * Checks if the variable is a plain object (as best as we can tell)
+	 * This falls victim to a couple false positives:
+	 *   Object.create(null) // Objects who have no prototype
+	 *   { constructor: someval } // Objects who have a property called "constructor"
+	 * Test: ['55', 55, 'asdf', new String('asdf'), parseInt('asdf', 10), new Number(234), null, undefined, [], new Date(), Date, function(){}, Object.create(null), {}, {a:5}].forEach(function(v){ console.log(Object.isPlainObject(v)); });
+	 *
+	 * @return	Bool
+	 */
+	Object.defineProperty(Object.prototype, "isPlainObject", {
+		enumerable: false,
+		value: function(v){
+			return (v != null && v.constructor === Object);
+		}
+	});
+}
+
 if (!Object.prototype.extend) {
 	/**
 	 * extend
@@ -19,7 +39,7 @@ if (!Object.prototype.extend) {
 			props.forEach(function(name) {
 				if (!existingPropsOnly || name in dest) {
 					var destination = Object.getOwnPropertyDescriptor(from, name);
-					if(typeof from[name] == 'object' && from[name] != null && from[name].constructor == Object && name != '_id'){
+					if(Object.isPlainObject(from[name]) && name != '_id'){
 						// If the field is an object and it's not an _id, clone it
 						var old = destination.value;
 						destination.value = old.clone();
@@ -114,7 +134,7 @@ if (!Object.prototype.diff) {
 			keys.remove('_id'); // Ignore _id fields
 			for(var i = 0; i < keys.length; i++){
 				var key = keys[i];
-				if(typeof b[key] == 'object' && b[key] != null && b[key].constructor == Object){
+				if(Object.isPlainObject(b[key])){
 					// The field is an object
 					if(b.hasOwnProperty(key)){
 						// And it exists in b, diff them
@@ -183,7 +203,7 @@ if (!Object.prototype.serializeDates) {
 						o[k].forEach(function(v, i, o){
 							if(v instanceof Date){
 								o[i] = {'$date': v.getTime()};
-							}else if(typeof v == 'object' && v.constructor == Object){
+							}else if(Object.isPlainObject(v)){
 								o[i].serializeDates(level + 1);
 							}
 						});
@@ -215,20 +235,23 @@ if (!Object.prototype.unserializeDates) {
 			}
 
 			var o = this;
-			if(typeof o == 'object' && o['$date'] && parseInt(o['$date'], 10) > 0){
+			if(Object.isPlainObject(o) && o['$date'] && parseInt(o['$date'], 10) > 0){
+				// It's a serialized date
 				o = new Date(o['$date']);
 			}else if(o instanceof Array){
+				// It's an array, unserialize every item inside it
 				o.forEach(function(i){ i.unserializeDates(level + 1); });
-			}else if(typeof o == 'object'){
+			}else if(Object.isPlainObject(o)){
+				// It's an iterable hash
 				for(var k in o){
-					if(o[k] != null && typeof o[k] == 'object' && o[k]['$date'] && !isNaN(parseInt(o[k]['$date'], 10)) ){
+					if(Object.isPlainObject(o[k]) && o[k]['$date'] && !isNaN(parseInt(o[k]['$date'], 10)) ){
 						var date = new Date(parseInt(o[k]['$date'], 10));
 						o[k] = date;
-					}else if(o[k] != null && typeof o[k] == 'object' && !(o[k] instanceof Array)){
+					}else if(Object.isPlainObject(o[k]) && !(o[k] instanceof Array)){
 						o[k].unserializeDates(level + 1);
 					}else if(o[k] instanceof Array){
 						// In the case of an array of dates
-						o[k].forEach(function(v, i, o){ if(typeof v == 'object' && v['$date'] && !isNaN(parseInt(v['$date'], 10)) ){ o[i] = new Date(v['$date']); } } );
+						o[k].forEach(function(v, i, o){ if(Object.isPlainObject(v) && v['$date'] && !isNaN(parseInt(v['$date'], 10)) ){ o[i] = new Date(v['$date']); } } );
 					}
 				}
 			}
@@ -271,7 +294,7 @@ if (!Object.prototype.flatten) {
 						}
 					}
 					else if (t === 'object' && v != null) {
-						if (v.constructor && v.constructor == Object) {
+						if (Object.isPlainObject(v)) {
 							// Check if the object contains a $command key
 							var command = false;
 							for(var j in v){
@@ -418,7 +441,7 @@ if (!Object.prototype.walk) {
 		value: function(o, fn) { // Recursively apply the given function to non-iterable items (iterating automatically over those which can be iterated)
 			for (var p in o){
 				if (o.hasOwnProperty(p)){
-					if (Array.isArray(o[p]) || (typeof o[p] == 'object' && o[p] != null && o[p].constructor == Object)){
+					if (Array.isArray(o[p]) || Object.isPlainObject(o[p])){
 						// It's a normal array or object, iterate it
 						walk(o[p], fn);
 					}else{
