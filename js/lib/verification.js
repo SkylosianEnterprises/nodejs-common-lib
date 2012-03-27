@@ -24,6 +24,8 @@ var _defaultExpression = exports._defaultExpression = function(type){
 			return /^[A-Za-z0-9\'\s]+$/;
 		case 'phone':
 			return /^[0-9\s\-\+\(\)]{7,16}$/;
+		case 'url':
+			return /^[-a-zA-Z0-9@:%_\+.~#?&//=]{2,256}\.[a-z]{2,4}\b(\/[-a-zA-Z0-9@:%_\+.~#?&//=]*)?/gi;
 		default:
 			return /.*/g;
 	}
