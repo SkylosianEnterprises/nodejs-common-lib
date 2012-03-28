@@ -188,7 +188,7 @@ if (!Object.prototype.serializeDates) {
 
 			var o = this;
 			if(o instanceof Date){
-				this = {'$date': o.getTime()};
+				o = {'$date': o.getTime()};
 			}else if(o instanceof Array){
 				o.forEach(function(i){ i.serializeDates(level + 1); });
 			}else if(typeof o == 'object'){
