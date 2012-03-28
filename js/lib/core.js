@@ -360,6 +360,25 @@ if (!String.prototype.trim) {
 	});
 }
 
+if (!String.prototype.quote) {
+	/**
+	 * String.prototype.quote(delim)
+	 *
+	 * Quotes the string with delim (default double quote) (and escapes instances of delim inside of string with \)
+	 *
+	 * @return String
+	 */
+	Object.defineProperty(String.prototype, "quote", {
+		enumerable: false,
+		value: function(delim, escaper) {
+			var delim = typeof delim == 'string' ? delim : '"'; // Default: double quote
+			var escaper = typeof escaper == 'string' ? escaper : "\\"; // Default: single backslash
+
+			return delim + this.replace(new RegExp(delim, 'g'), escaper + delim) + delim;
+		}
+	});
+}
+
 if (!Array.prototype.has) {
 	/**
 	 * Array.prototype.has(o)
