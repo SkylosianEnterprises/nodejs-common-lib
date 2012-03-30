@@ -344,6 +344,63 @@ if (!Object.prototype.nameOf) {
 	});
 }
 
+if (!Object.prototype.walk) {
+	// Walk over objects
+	Object.defineProperty(Object.prototype, 'walk', {
+		enumerable: false,
+		value: function(o, fn) { // Recursively apply the given function to non-iterable items (iterating automatically over those which can be iterated)
+			for (var p in o){
+				if (o.hasOwnProperty(p)){
+					if (Array.isArray(o[p]) || Object.isPlainObject(o[p])){
+						// It's a normal array or object, iterate it
+						walk(o[p], fn);
+					}else{
+						// Otherwise we have no idea what it is, just run the method on it directly and store the returned result in place
+						o[p] = fn(o[p], p, o);
+					}
+				}
+			}
+		}
+	});
+}
+
+if (!Object.prototype.keys) {
+	// Return a list of iterable keys for a given Object
+	(function () {
+		var hasOwnProperty = Object.prototype.hasOwnProperty,
+			hasDontEnumBug = !({toString: null}).propertyIsEnumerable('toString'),
+			dontEnums = [
+				'toString',
+				'toLocaleString',
+				'valueOf',
+				'hasOwnProperty',
+				'isPrototypeOf',
+				'propertyIsEnumerable',
+				'constructor'
+			],
+			dontEnumsLength = dontEnums.length;
+			Object.defineProperty(Object.prototype, 'keys', {
+				enumerable: false,
+				value: function(obj){
+					if(typeof obj !== 'object' && typeof obj !== 'function' || obj === null) throw new TypeError('Object.keys called on non-object')
+
+					var result = [];
+
+					for(var prop in obj){
+						if(hasOwnProperty.call(obj, prop)) result.push(prop);
+					}
+
+					if(hasDontEnumBug){
+						for(var i=0; i < dontEnumsLength; i++){
+							if(hasOwnProperty.call(obj, dontEnums[i])) result.push(dontEnums[i]);
+						}
+					}
+					return result;
+				}
+			});
+	})();
+};
+
 if (!String.prototype.trim) {
 	/**
 	 * String.prototype.trim()
@@ -375,6 +432,34 @@ if (!String.prototype.quote) {
 			var escaper = typeof escaper == 'string' ? escaper : "\\"; // Default: single backslash
 
 			return delim + this.replace(new RegExp(delim, 'g'), escaper + delim) + delim;
+		}
+	});
+}
+
+if (!String.prototype.reverse) {
+	/**
+	 * String.prototype.reverse()
+	 *
+	 * Return the reverse of the string
+	 *
+	 * @param	trickMethod		bool	false to not use the Array.reverse trick (which is much slower for small strings)
+	 *
+	 * @return String
+	 */
+	Object.defineProperty(String.prototype, "reverse", {
+		enumerable: false,
+		value: function(trickMethod){
+			if(trickMethod === false){
+				var i, s = "";
+				for(i = this.length; i >= 0; i--){
+					s += this.charAt(i);
+				}
+				return s;
+			}else{
+				// Trick using Array.reverse
+				// Note that for strings smaller than 64 bytes (on average) this method is about 200% slower than the normal char-by-char method
+				return this.split('').reverse().join('');
+			}
 		}
 	});
 }
@@ -452,63 +537,6 @@ if (!Array.prototype.add) {
 		}
 	});
 }
-
-// Walk over objects
-if (!Object.prototype.walk) {
-	Object.defineProperty(Object.prototype, 'walk', {
-		enumerable: false,
-		value: function(o, fn) { // Recursively apply the given function to non-iterable items (iterating automatically over those which can be iterated)
-			for (var p in o){
-				if (o.hasOwnProperty(p)){
-					if (Array.isArray(o[p]) || Object.isPlainObject(o[p])){
-						// It's a normal array or object, iterate it
-						walk(o[p], fn);
-					}else{
-						// Otherwise we have no idea what it is, just run the method on it directly and store the returned result in place
-						o[p] = fn(o[p], p, o);
-					}
-				}
-			}
-		}
-	});
-}
-
-// Return a list of iterable keys for a given Object
-if (!Object.prototype.keys) {
-	(function () {
-		var hasOwnProperty = Object.prototype.hasOwnProperty,
-			hasDontEnumBug = !({toString: null}).propertyIsEnumerable('toString'),
-			dontEnums = [
-				'toString',
-				'toLocaleString',
-				'valueOf',
-				'hasOwnProperty',
-				'isPrototypeOf',
-				'propertyIsEnumerable',
-				'constructor'
-			],
-			dontEnumsLength = dontEnums.length;
-			Object.defineProperty(Object.prototype, 'keys', {
-				enumerable: false,
-				value: function(obj){
-					if(typeof obj !== 'object' && typeof obj !== 'function' || obj === null) throw new TypeError('Object.keys called on non-object')
-
-					var result = [];
-
-					for(var prop in obj){
-						if(hasOwnProperty.call(obj, prop)) result.push(prop);
-					}
-
-					if(hasDontEnumBug){
-						for(var i=0; i < dontEnumsLength; i++){
-							if(hasOwnProperty.call(obj, dontEnums[i])) result.push(dontEnums[i]);
-						}
-					}
-					return result;
-				}
-			});
-	})();
-};
 
 /**
  * Copyright (c) 2011 Manta Media, Inc.
