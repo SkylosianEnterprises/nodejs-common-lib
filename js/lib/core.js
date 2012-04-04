@@ -227,6 +227,7 @@ if (!Object.prototype.unserializeDates) {
 	Object.defineProperty(Object.prototype, "unserializeDates", {
 		enumerable: false,
 		value: function(level){
+			var clonedObject;
 			var level = level > 0 ? level : 1; // Recursion level, for reference and preventing infinite recursion
 			if(level > 10){
 				// This probably means you passed a circular reference, but rather than allow node to crash itself we should just stop trying
@@ -237,24 +238,29 @@ if (!Object.prototype.unserializeDates) {
 			var o = this;
 			if(Object.isPlainObject(o) && o['$date'] && parseInt(o['$date'], 10) > 0){
 				// It's a serialized date
-				o = new Date(o['$date']);
+				clonedObject = new Date(o['$date']);
 			}else if(o instanceof Array){
 				// It's an array, unserialize every item inside it
-				o.forEach(function(i){ i.unserializeDates(level + 1); });
+				clonedObject = [];
+				o.forEach(function(i){ clonedObject.push(i.unserializeDates(level + 1)); });
 			}else if(Object.isPlainObject(o)){
+				clonedObject = {};
 				// It's an iterable hash
 				for(var k in o){
 					if(Object.isPlainObject(o[k]) && o[k]['$date'] && !isNaN(parseInt(o[k]['$date'], 10)) ){
-						var date = new Date(parseInt(o[k]['$date'], 10));
-						o[k] = date;
+						clonedObject[k] = new Date(parseInt(o[k]['$date'], 10));
 					}else if(Object.isPlainObject(o[k]) && !(o[k] instanceof Array)){
-						o[k].unserializeDates(level + 1);
+						clonedObject[k] = o[k].unserializeDates(level + 1);
 					}else if(o[k] instanceof Array){
 						// In the case of an array of dates
-						o[k].forEach(function(v, i, o){ if(Object.isPlainObject(v) && v['$date'] && !isNaN(parseInt(v['$date'], 10)) ){ o[i] = new Date(v['$date']); } } );
+						clonedObject = [];
+						o[k].forEach(function(v, i, o){ if(Object.isPlainObject(v) && v['$date'] && !isNaN(parseInt(v['$date'], 10)) ){ clonedObject[i] = new Date(v['$date']); } } );
+					}else{
+						clonedObject = o;
 					}
 				}
 			}
+			return clonedObject;
 		}
 	});
 }
