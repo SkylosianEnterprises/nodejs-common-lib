@@ -442,6 +442,24 @@ if (!String.prototype.quote) {
 	});
 }
 
+if (!String.prototype.escapejQuerySelector) {
+	/**
+	 * String.prototype.escapejQuerySelector()
+	 *
+	 * Escape the following jQuery selector characters: #;&,.+*~':"!^$[]()=>|/%
+	 *
+	 * @return String
+	 */
+	Object.defineProperty(String.prototype, "escapejQuerySelector", {
+		enumerable: false,
+		value: function(escaper) {
+			var escaper = typeof escaper == 'string' ? escaper : "\\"; // Default: single backslash
+
+			return this.replace(/([#;&,\.\+*~'\:"\!\^\$\[\]\(\)=\>|\/%])/g, escaper + "$1");
+		}
+	});
+}
+
 if (!String.prototype.reverse) {
 	/**
 	 * String.prototype.reverse()
