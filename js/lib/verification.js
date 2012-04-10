@@ -15,7 +15,7 @@ var _defaultExpression = exports._defaultExpression = function(type){
 		case 'identifier':
 			return /^[A-Za-z0-9\-]+$/;
 		case 'alphanumeric':
-			return /^[A-Za-z0-9\.\,]+$/;
+			return /^[A-Za-z0-9\-\.\,]+$/;
 		case 'numeric':
 			return /^[0-9\.\s\,]+/;
 		case 'email':
@@ -117,7 +117,7 @@ var verify = exports.verify = function(data, rules, throwExceptions, path){
 
 			// Read the rules declaration and parse all the generic things we have to check for, one by one, and throw up exceptions (or collect them in an array) wherever there are problems
 			// Exceptions should be in the form: { type: 'Type', field: fieldName, path: fieldPath, message: 'Something descriptive that explains what was wrong with the field' }
-			// Or   extend(e, { type: 'Type', message: 'Friendly message' })   to derive the field and path parts automatically
+			// Or   extend(e, { type: 'Type', message: 'Friendly message' }, rtn)   to avoid specifying field and path
 			if(value == '' || typeof value == 'undefined' || value == null || (value instanceof Array && value.length == 0)){
 				// No value
 				// If it's required and not supposed to be a subdocument
@@ -210,7 +210,7 @@ var verify = exports.verify = function(data, rules, throwExceptions, path){
 							err = extend(err, e);
 							error(fieldPath, err, rtn);
 						}
-						if(!result){
+						if(result === false){
 							error(fieldPath, extend(e, { type: 'TesterFailed', message: 'Field ' + i + ' was run against custom tester method, returned false' }), rtn);
 						}
 					}
