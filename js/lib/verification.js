@@ -37,23 +37,29 @@ var verify = exports.verify = function(data, rules, throwExceptions, path){
 	var rtn = { error: false, errors: [], fields: {}, badFields: [] };
 	var throwExceptions = typeof throwExceptions == 'undefined' ? false : (throwExceptions ? true : false); // Throws up individual exceptions instead of gathering them all into a big array
 
-	var error = function(field, e){
+	var error = function(field, e, rpt){
 		if(typeof field == 'object' && (field.field || field.path)){
 			// No specified field name, try to derive it from the error
 			e = field;
 			field = e.path ? e.path : e.field;
 		}
 
-		rtn.fields[field] = false; // Set the field to false
-		rtn.errors.push(e); // Add the error to the list
+		rpt.fields[field] = false; // Set the field to false
+		rpt.errors.push(e); // Add the error to the list
 		if(throwExceptions) throw e; // Optionally throw the error as an exception
 	};
 
 	var extend = function(o, n){
-		for(var i in n){
-			o[i] = n[i];
+		var t = {};
+		// Clone o into t
+		for(var i in o){
+			t[i] = o[i];
 		}
-		return o;
+		// Copy elements from n over top of the elements from o
+		for(var i in n){
+			t[i] = n[i];
+		}
+		return t;
 	};
 
 	// Iterate all the defined rules
@@ -79,25 +85,25 @@ var verify = exports.verify = function(data, rules, throwExceptions, path){
 			values = [ data[i] ];
 		}else if(rule.array && !(data[i] instanceof Array)){
 			// It should be an array but it's not
-			error(fieldPath, extend(e, { type: 'InvalidField', message: 'Field ' + fieldName + ' was supposed to be an array but its not' }));
+			error(fieldPath, extend(e, { type: 'InvalidField', message: 'Field ' + fieldName + ' was supposed to be an array but its not' }), rtn);
 			values = [];
 		}
 
 		// Special check for empty arrays which weren't defined -- if it was required we just need to make sure it had at least one element
 		if( rule.array && ((data[i] instanceof Array && data[i].length == 0) || typeof data[i] == 'undefined') && rule.required ){
-			error(fieldPath, extend(e, { type: 'RequiredField', message: 'Required field ' + fieldName + ' was ' + (value instanceof Array ? 'empty' : 'undefined') }));
+			error(fieldPath, extend(e, { type: 'RequiredField', message: 'Required field ' + fieldName + ' was ' + (value instanceof Array ? 'empty' : 'undefined') }), rtn);
 		}
 
 		// Check if the array size is greater or less than the maxcount / mincount respectively
 		if(rule.array){
 			if(rule.maxcount){
 				if(values.length > rule.maxcount){
-					error(fieldPath, extend(e, { type: 'MaxCountExceeded', message: 'The field ' + fieldName + ' had more elements (' + values.length + ') than are allowed for this collection (' + rule.maxcount + ')' }));
+					error(fieldPath, extend(e, { type: 'MaxCountExceeded', message: 'The field ' + fieldName + ' had more elements (' + values.length + ') than are allowed for this collection (' + rule.maxcount + ')' }), rtn);
 				}
 			}
 			if(rule.mincount){
 				if(values.length < rule.mincount){
-					error(fieldPath, extend(e, { type: 'MinCountNotMet', message: 'The field ' + fieldName + ' had fewer elements (' + values.length + ') than are required for this collection (' + rule.mincount + ')' }));
+					error(fieldPath, extend(e, { type: 'MinCountNotMet', message: 'The field ' + fieldName + ' had fewer elements (' + values.length + ') than are required for this collection (' + rule.mincount + ')' }), rtn);
 				}
 			}
 		}
@@ -107,7 +113,7 @@ var verify = exports.verify = function(data, rules, throwExceptions, path){
 			var value = values[v];
 			fieldName = rule.array ? i + '.' + v : i;
 			fieldPath = path + fieldName;
-			e = { field: fieldName, path: fieldPath }; // Error stub
+			var e = { field: fieldName, path: fieldPath }; // Error stub
 
 			// Read the rules declaration and parse all the generic things we have to check for, one by one, and throw up exceptions (or collect them in an array) wherever there are problems
 			// Exceptions should be in the form: { type: 'Type', field: fieldName, path: fieldPath, message: 'Something descriptive that explains what was wrong with the field' }
@@ -116,17 +122,17 @@ var verify = exports.verify = function(data, rules, throwExceptions, path){
 				// No value
 				// If it's required and not supposed to be a subdocument
 				if(rule.required && !rule.subdocument){
-					error(fieldPath, extend(e, { type: 'RequiredField', message: 'Required field ' + fieldName + ' was ' + (value instanceof Array ? 'empty' : 'undefined') }));
+					error(fieldPath, extend(e, { type: 'RequiredField', message: 'Required field ' + fieldName + ' was ' + (value instanceof Array ? 'empty' : 'undefined') }), rtn);
 				}
 				// Required and it's supposed to be a subdocument
 				if(rule.required && rule.subdocument){
-					error(fieldPath, extend(e, { type: 'InvalidSubdocument', message: 'Field ' + fieldName + ' was expected to be a subdocument but was undefined' }));
+					error(fieldPath, extend(e, { type: 'InvalidSubdocument', message: 'Field ' + fieldName + ' was expected to be a subdocument but was undefined' }), rtn);
 				}
 			}else{
 				// See if the rule structure defines this field as a subdocument -- if so run just those rules against just this field and roll it all up
 				if(rule.subdocument){
 					if(typeof value != 'object' || value.constructor != Object){
-						error(fieldPath, extend(e, { type: 'InvalidSubdocument', message: 'Field ' + fieldName + ' was expected to be a subdocument but was not' }));
+						error(fieldPath, extend(e, { type: 'InvalidSubdocument', message: 'Field ' + fieldName + ' was expected to be a subdocument but was not' }), rtn);
 					}else{
 						var rpt = verify(value, rule.subdocument, throwExceptions, fieldPath);
 						if(rpt.error){
@@ -134,9 +140,9 @@ var verify = exports.verify = function(data, rules, throwExceptions, path){
 							for(var f in rpt.fields){
 								rtn.fields[f] = rpt.fields[f];
 							}
-							for(var e in rpt.errors){
+							for(var x in rpt.errors){
 								// Update the references to include sub-document notation
-								rtn.errors.push(rpt.errors[e]);
+								rtn.errors.push(rpt.errors[x]);
 							}
 						}
 					}
@@ -158,7 +164,7 @@ var verify = exports.verify = function(data, rules, throwExceptions, path){
 						var iof = Object.getOwnPropertyDescriptor(rule, 'instanceof').value;
 						if(!(value instanceof iof)){
 							var message = 'Field ' + fieldName + ' was not an instance of ' + (typeof iof.nameOf == 'function' ? iof.nameOf() : 'the required type');
-							error(fieldPath, extend(e, { type: 'InvalidInstance', message: message }));
+							error(fieldPath, extend(e, { type: 'InvalidInstance', message: message }), rtn);
 						}
 					}
 
@@ -167,7 +173,7 @@ var verify = exports.verify = function(data, rules, throwExceptions, path){
 						// The value should have a constructor of the given type
 						if(!(value.constructor == Object.getOwnPropertyDescriptor(rule, 'constructor').value /* Reference to the actual constructor property, not Object */)){
 							var message = 'Field ' + fieldName + ' was not constructed with ' + (typeof rule.constructor.nameOf == 'function' ? rule.constructor.nameOf() : 'the required constructor');
-							error(fieldPath, extend(e, { type: 'InvalidConstructor', message: message }));
+							error(fieldPath, extend(e, { type: 'InvalidConstructor', message: message }), rtn);
 						}
 					}
 
@@ -175,13 +181,13 @@ var verify = exports.verify = function(data, rules, throwExceptions, path){
 					if(rule.minlength){
 						// The value should be an instanceof
 						if(value.length < rule.minlength){
-							error(fieldPath, extend(e, { type: 'ValueLengthBelowExpectation', message: 'Field ' + i + ' had a value whose length did not meet the minimum requirement: ' + rule.minlength }));
+							error(fieldPath, extend(e, { type: 'ValueLengthBelowExpectation', message: 'Field ' + i + ' had a value whose length did not meet the minimum requirement: ' + rule.minlength }), rtn);
 						}
 					}
 					if(rule.maxlength){
 						// The value should be an instanceof
 						if(value.length > rule.maxlength){
-							error(fieldPath, extend(e, { type: 'ValueLengthExceeded', message: 'Field ' + i + ' had a value whose length exceeded: ' + rule.maxlength }));
+							error(fieldPath, extend(e, { type: 'ValueLengthExceeded', message: 'Field ' + i + ' had a value whose length exceeded: ' + rule.maxlength }), rtn);
 						}
 					}
 
@@ -190,7 +196,7 @@ var verify = exports.verify = function(data, rules, throwExceptions, path){
 						var enm = Object.getOwnPropertyDescriptor(rule, 'enum').value;
 						// The value should be one of the given values in the array
 						if(!(enm.indexOf(value) >= 0)){
-							error(fieldPath, extend(e, { type: 'InvalidValue', message: 'Field ' + i + ' did not have a valid value' }));
+							error(fieldPath, extend(e, { type: 'InvalidValue', message: 'Field ' + i + ' did not have a valid value' }), rtn);
 						}
 					}
 
@@ -202,10 +208,10 @@ var verify = exports.verify = function(data, rules, throwExceptions, path){
 						} catch(err) {
 							// Catch anything the tester threw up and aggregate it
 							err = extend(err, e);
-							error(fieldPath, err);
+							error(fieldPath, err, rtn);
 						}
 						if(!result){
-							error(fieldPath, extend(e, { type: 'TesterFailed', message: 'Field ' + i + ' was run against custom tester method, returned false' }));
+							error(fieldPath, extend(e, { type: 'TesterFailed', message: 'Field ' + i + ' was run against custom tester method, returned false' }), rtn);
 						}
 					}
 
@@ -219,7 +225,7 @@ var verify = exports.verify = function(data, rules, throwExceptions, path){
 
 						// See if it matches the given expression
 						if(!new String(value).match(expression)){ // Cast as a string to prevent comparison errors
-							error(fieldPath, extend(e, { type: 'MatchFailed', message: 'Field ' + i + ', with given value "' + value + '" didnt match the following expression: ' + expression }));
+							error(fieldPath, extend(e, { type: 'MatchFailed', message: 'Field ' + i + ', with given value "' + value + '" didnt match the following expression: ' + expression }), rtn);
 						}
 					}
 
