@@ -13,15 +13,6 @@ var setUpdateTimeValues = exports.setUpdateTimeValues = function (data) { 	membe
 	return data;
 };
 
-var setLcValues = exports.setLcValues = function (data) {
-	memberLcTsKeys.forEach(function(v, i, a) {
-		if(data[v]){
-			data[v + '_lc'] = data[v].toLowerCase();
-		}
-	});
-	return data;
-};
-
 var setAddTimeValues = exports.setAddTimeValues = function (data) {
 	memberAddTsKeys.forEach(function(v, i, a) {
 		data[v] = new Date();
@@ -31,7 +22,7 @@ var setAddTimeValues = exports.setAddTimeValues = function (data) {
 
 var setLcValues = exports.setLcValues = function (data) {
 	memberLcTsKeys.forEach(function(v, i, a) {
-		if(data[v]){
+		if(v in data){
 			data[v + '_lc'] = data[v].toLowerCase();
 		}
 	});
@@ -50,11 +41,4 @@ var buildAdd = exports.buildAdd = function (data) {
 
 	return setLcValues(setAddTimeValues(setUpdateTimeValues(data)));
 };
-
-
-
-
-
-
-
 
