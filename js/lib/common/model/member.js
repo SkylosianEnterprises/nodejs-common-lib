@@ -1,6 +1,8 @@
 // member model
 // special methods to operate on a member
 
+var mkid = require('util/mkid').mkid;
+
 var memberUpdateTsKeys = ['last_update_timestamp'];
 var memberAddTsKeys = ['register_timestamp'];
 var memberLcTsKeys = ['lastname', 'firstname', 'email'];
@@ -43,7 +45,7 @@ var buildUpdate = exports.buildUpdate = function (data) {
 
 var buildAdd = exports.buildAdd = function (data) {
 	// Build the update query
-	var ip = member.register_ip || '0.0.0.0';
+	var ip = data.register_ip || '0.0.0.0';
 	data._id = mkid(ip);
 
 	return setLcValues(setAddTimeValues(setUpdateTimeValues(data)));
