@@ -1,6 +1,6 @@
 { "name" : "core"
 , "description" : "Manta member services core library"
-, "main" : "lib/core.js"
+, "main" : "index.js"
 , "author" : "Manta Media"
 , "version" : "0.1.1"
 , "repository" :
