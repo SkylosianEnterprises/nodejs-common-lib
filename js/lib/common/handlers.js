@@ -299,3 +299,11 @@ var getLib = exports.getLib = function(req, res, next, raw){
 		res.end('');
 	}
 };
+
+var exit = exports.exit = function(req, res, next){
+	req._output_struct = {pid: process.pid}
+	flush(req, res);
+	process.exit();
+};
+
+
