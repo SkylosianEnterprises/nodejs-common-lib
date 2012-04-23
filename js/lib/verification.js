@@ -25,7 +25,7 @@ var _defaultExpression = exports._defaultExpression = function(type){
 		case 'phone':
 			return /^[0-9\s\-\+\(\)]{7,16}$/;
 		case 'url':
-			return /^[-a-zA-Z0-9@:%_\+.~#?&//=]{2,256}\.[a-z]{2,4}\b(\/[-a-zA-Z0-9@:%_\+.~#?&//=]*)?/gi;
+			return /^[-a-zA-Z0-9@:%_\+.~#?&/=]{2,256}\.[a-z]{2,4}\b(\/[-a-zA-Z0-9@:%_\+.~#?&//=]*)?$/gi;
 		default:
 			return /.*/g;
 	}
@@ -127,6 +127,9 @@ var verify = exports.verify = function(data, rules, throwExceptions, path){
 				// Required and it's supposed to be a subdocument
 				if(rule.required && rule.subdocument){
 					error(fieldPath, extend(e, { type: 'InvalidSubdocument', message: 'Field ' + fieldName + ' was expected to be a subdocument but was undefined' }), rtn);
+				}
+				if(rule.notblank && typeof value != 'undefined'){
+					error(fieldPath, extend(e, { type: 'IncompleteField', message: 'Field ' + fieldName + ' was defined but blank' }), rtn);
 				}
 			}else{
 				// See if the rule structure defines this field as a subdocument -- if so run just those rules against just this field and roll it all up

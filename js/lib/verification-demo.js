@@ -13,6 +13,7 @@ var data = {
 	single: { type: { id: 55 } },
 	bool: true,
 	nested: { a: { b: true } },
+	blank: undefined,
 };
 
 var fields = {
@@ -35,6 +36,7 @@ var fields = {
 						},
 				bool:	{ constructor: Boolean }, // check if: bool.constructor == Boolean
 				nested:	{ subdocument: { a: { required: true, subdocument: { b: { required: true, subdocument: {  } } } } } },
+				blank:	{ notblank: true },
 			};
 
 console.dir(data);
