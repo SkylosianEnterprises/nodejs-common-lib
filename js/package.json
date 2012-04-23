@@ -1,5 +1,5 @@
-{ "name" : "core"
-, "description" : "Manta member services core library"
+{ "name" : "common"
+, "description" : "Manta member services common core library"
 , "main" : "index.js"
 , "author" : "Manta Media"
 , "version" : "0.1.1"

@@ -132,8 +132,6 @@ var flush = exports.flush = function(req, res){
 		res.setHeader('Content-Type', 'application/json');
 	}
 
-	console.log('Writing body: ' + output);
-
 	try {
 		res.end(output);
 	} catch(e) {
@@ -298,6 +296,11 @@ var getLib = exports.getLib = function(req, res, next, raw){
 		res.writeHead('Status: 404 Not Found');
 		res.end('');
 	}
+};
+
+var getRules = exports.getRules = function(req, res, next){
+	req._output_struct = req.ctx.rules;
+	flush(req, res);
 };
 
 var exit = exports.exit = function(req, res, next){
