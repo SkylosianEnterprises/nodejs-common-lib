@@ -2,9 +2,127 @@
  * Augment the basic javascript types with some helper methods
  */
 
+var dumbBrowser = false;
+if (Object.defineProperty) {
+	try {
+		// This disgraceful piece of nonsense is to see if we're in the wonderful world of IE8, Object.defineProperty throws an error on non-DOM elements (WTF.)
+		Object.defineProperty(Array.prototype, '_z', { value: function(){} });
+	}
+	catch (e) {
+		dumbBrowser = true;
+	}
+	finally {
+		if(Array.prototype._z) delete Array.prototype._z; // Undo our test
+	}
+}else{
+	dumbBrowser = true;
+}
+
+var fakePrototype = function(proto){
+	var prototype;
+	if(!dumbBrowser && typeof console.log == 'function') console.log('You probably shouldnt call fakePrototype in a smart browser');
+	switch(proto){
+		case Object.prototype:
+		case Object:
+			return Object;
+		case Array.prototype:
+		case Array:
+			return Array;
+		case String.prototype:
+		case String:
+			return String;
+		case Number.prototype:
+		case Number:
+			return Number;
+		case Boolean.prototype:
+		case Boolean:
+			return Boolean;
+		default:
+			return proto;
+	}
+}
+
+var defineProperty;
+if(dumbBrowser){
+	// We're in a dumb browser that doesn't have a decent Object.defineProperty
+	// Make a fake one (beware: these prototype methods are enumerated whenever you iterate your objects)
+	// Also don't even try to build anything that uses any special Object property descriptor syntax (only inject if !dumbBrowser)
+
+	defineProperty = function(obj, prop, desc){
+		// So what we do here is fetch the value of the property which they were hoping to set, via desc.value
+		// Then we use fakePrototype to see if we're attaching to the Object.prototype (or other basic prototype),
+		//   and if so, attach it directly to the Object method itself
+		// This is because IE doesn't support non-enumerable properties, so enumerable methods pollute other libraries,
+		//   which expect to iterate over objects and arrays and only receive the values contained
+		var prototype = fakePrototype(obj);
+		prototype[prop] = desc.value;
+	};
+}else{
+	// For everything else, we _do_ want our methods on the prototype, except portable code which runs in both cases needs to be able to work
+	// So what we do is wrap normal Object.defineProperty behavior by also adding a quick reference onto the class method itself
+	// So:  Object.defineProperty(String.prototype, 'foo', {enumerable:false,value:'bar'})
+	//  would add a reference to String.foo, which you would use with .call to pass the correct object context
+	//  and it would safely resolve to the correct function in all environments, while retaining the prototype method in smarter environments
+	defineProperty = function(obj, prop, desc){
+		// Create a reference to the prototype method on the class method, so we can do String.reverse.call() and use that same code in IE
+		var c = false;
+		switch(obj){
+			case Array.prototype:
+				c = Array; break;
+			case Object.prototype:
+				c = Object; break;
+			case String.prototype:
+				c = String; break;
+			case Number.prototype:
+				c = Number; break;
+			case Boolean.prototype:
+				c = Boolean; break;
+		}
+
+		if(c){
+			// Dealing with a basic type, let's add a reference
+			Object.defineProperty(c, prop, desc);
+		}
+
+		var myReturn = Object.defineProperty(obj, prop, desc);
+	};
+}
+
+if (!Array.prototype.forEach) {
+	// Emulate forEach
+	defineProperty(Array.prototype, "forEach", {
+		enumerable: false,
+		value: function(f){
+			for(var i = 0; i < this.length; i++){
+				f(this[i], i, this);
+			}
+		}
+	});
+}
+if (!Array.forEach) {
+	// Shim reference for Array.forEach in environments with native forEach
+	Object.defineProperty(Array, 'forEach', {value: Array.prototype.forEach});
+}
+
+if (!Object.prototype.keys) {
+	defineProperty(Object.prototype, "keys", {
+		enumerable: false,
+		value: function(o){
+			if(o !== Object(o)) throw new TypeError('Object.keys called on non-object');
+			var ret = [], p;
+			for(p in o){
+				if(Object.prototype.hasOwnProperty.call(o,p)){
+					ret.push(p);
+				}
+			}
+			return ret;
+		}
+	});
+}
+
 if (!Object.prototype.isPlainObject) {
 	/**
-	 * Object.prototype.isObject(v)
+	 * Object.prototype.isPlainObject(v)
 	 *
 	 * Checks if the variable is a plain object (as best as we can tell)
 	 * This falls victim to a couple false positives:
@@ -14,7 +132,7 @@ if (!Object.prototype.isPlainObject) {
 	 *
 	 * @return	Bool
 	 */
-	Object.defineProperty(Object.prototype, "isPlainObject", {
+	defineProperty(Object.prototype, "isPlainObject", {
 		enumerable: false,
 		value: function(v){
 			return (v != null && v.constructor === Object);
@@ -22,7 +140,7 @@ if (!Object.prototype.isPlainObject) {
 	});
 }
 
-if (!Object.prototype.extend) {
+if (!Object.prototype.extend && !dumbBrowser) {
 	/**
 	 * extend
 	 *
@@ -30,13 +148,13 @@ if (!Object.prototype.extend) {
 	 * 
 	 * @param Object
 	 */
-	Object.defineProperty(Object.prototype, "extend", {
+	defineProperty(Object.prototype, "extend", {
 		enumerable: false,
 		value: function(from, existingPropsOnly, copyDirectly) {
 			var existingPropsOnly = existingPropsOnly == false ? false : true;
 			var props = Object.getOwnPropertyNames(from);
 			var dest = this;
-			props.forEach(function(name) {
+			Array.forEach.call(props, function(name) {
 				if (!existingPropsOnly || name in dest) {
 					var destination = Object.getOwnPropertyDescriptor(from, name);
 					if(Object.isPlainObject(from[name]) && name != '_id'){
@@ -46,7 +164,7 @@ if (!Object.prototype.extend) {
 					}
 					if(!copyDirectly){
 						try {
-							Object.defineProperty(dest, name, destination);
+							defineProperty(dest, name, destination);
 						} catch(e) {
 							//we want to ignore some thangs	
 						}
@@ -61,7 +179,7 @@ if (!Object.prototype.extend) {
 	});
 }
 
-if (!Object.prototype.clone) {
+if (!Object.prototype.clone && !dumbBrowser) {
 	/**
 	 * clone
 	 *
@@ -69,7 +187,7 @@ if (!Object.prototype.clone) {
 	 *
 	 * @param	Object
 	 */
-	Object.defineProperty(Object.prototype, 'clone', {
+	defineProperty(Object.prototype, 'clone', {
 		enumerable: false,
 		value: function(){
 			return {}.extend(this, false);
@@ -77,7 +195,7 @@ if (!Object.prototype.clone) {
 	});
 }
 
-if (!Object.prototype.isEmpty) {
+if (!Object.prototype.isEmpty && !dumbBrowser) {
 	/**
 	 * Object.prototype.isEmpty()
 	 *
@@ -85,7 +203,7 @@ if (!Object.prototype.isEmpty) {
 	 *
 	 * @return	Bool
 	 */
-	Object.defineProperty(Object.prototype, "isEmpty", {
+	defineProperty(Object.prototype, "isEmpty", {
 		enumerable: false,
 		value: function(){
 			for(var i in this){
@@ -99,7 +217,7 @@ if (!Object.prototype.isEmpty) {
 	});
 }
 
-if (!Object.prototype.diff) {
+if (!Object.prototype.diff && !dumbBrowser) {
 	/**
 	 * Object.prototype.diff(b)
 	 *
@@ -108,7 +226,7 @@ if (!Object.prototype.diff) {
 	 *
 	 * @return	Object
 	 */
-	Object.defineProperty(Object.prototype, "diff", {
+	defineProperty(Object.prototype, "diff", {
 		enumerable: false,
 		value: function(b){
 			var keys;
@@ -176,7 +294,7 @@ if (!Object.prototype.serializeDates) {
 	 *
 	 * @return	Object
 	 */
-	Object.defineProperty(Object.prototype, "serializeDates", {
+	defineProperty(Object.prototype, "serializeDates", {
 		enumerable: false,
 		value: function(level){
 			var level = level > 0 ? level : 1; // Recursion level, for reference and preventing infinite recursion
@@ -190,21 +308,21 @@ if (!Object.prototype.serializeDates) {
 			if(o instanceof Date){
 				o = {'$date': o.getTime()};
 			}else if(o instanceof Array){
-				o.forEach(function(i){ i.serializeDates(level + 1); });
+				Array.forEach.call(o, function(i){ Object.serializeDates.call(i, level + 1); });
 			}else if(typeof o == 'object'){
 				for(var k in o){
 					if(o[k] != null && typeof o[k] == 'object' && o[k] instanceof Date){
 						var time = o[k].getTime();
 						o[k] = {'$date': time};
 					}else if(o[k] != null && typeof o[k] == 'object' && !(o[k] instanceof Array)){
-						o[k].serializeDates(level + 1);
+						Object.serializeDates.call(o[k], level + 1);
 					}else if(o[k] instanceof Array){
 						// In the case of an array of dates
-						o[k].forEach(function(v, i, o){
+						Array.forEach.call(o[k], function(v, i, o){
 							if(v instanceof Date){
 								o[i] = {'$date': v.getTime()};
 							}else if(Object.isPlainObject(v)){
-								o[i].serializeDates(level + 1);
+								Object.serializeDates.call(o[i], level + 1);
 							}
 						});
 					}
@@ -224,7 +342,7 @@ if (!Object.prototype.unserializeDates) {
 	 *
 	 * @return	Object
 	 */
-	Object.defineProperty(Object.prototype, "unserializeDates", {
+	defineProperty(Object.prototype, "unserializeDates", {
 		enumerable: false,
 		value: function(level){
 			var clonedObject;
@@ -242,7 +360,7 @@ if (!Object.prototype.unserializeDates) {
 			}else if(o instanceof Array){
 				// It's an array, unserialize every item inside it
 				clonedObject = [];
-				o.forEach(function(i){ clonedObject.push(i.unserializeDates(level + 1)); });
+				Array.forEach.call(o, function(i){ clonedObject.push(Object.unserializeDates.call(i, level + 1)); });
 			}else if(Object.isPlainObject(o)){
 				clonedObject = {};
 				// It's an iterable hash
@@ -250,11 +368,11 @@ if (!Object.prototype.unserializeDates) {
 					if(Object.isPlainObject(o[k]) && o[k]['$date'] && !isNaN(parseInt(o[k]['$date'], 10)) ){
 						clonedObject[k] = new Date(parseInt(o[k]['$date'], 10));
 					}else if(Object.isPlainObject(o[k]) && !(o[k] instanceof Array)){
-						clonedObject[k] = o[k].unserializeDates(level + 1);
+						clonedObject[k] = Object.unserializeDates.call(o[k], level + 1);
 					}else if(o[k] instanceof Array){
 						// In the case of an array of dates
 						clonedObject = [];
-						o[k].forEach(function(v, i, o){ if(Object.isPlainObject(v) && v['$date'] && !isNaN(parseInt(v['$date'], 10)) ){ clonedObject[i] = new Date(v['$date']); } } );
+						Array.forEach.call(o[k], function(v, i, o){ if(Object.isPlainObject(v) && v['$date'] && !isNaN(parseInt(v['$date'], 10)) ){ clonedObject[i] = new Date(v['$date']); } } );
 					}else{
 						clonedObject = o;
 					}
@@ -279,7 +397,7 @@ if (!Object.prototype.flatten) {
 	 *
 	 * @return	Object
 	 */
-	Object.defineProperty(Object.prototype, "flatten", {
+	defineProperty(Object.prototype, "flatten", {
 		enumerable: false,
 		value: function(){
 			var kv, name;
@@ -342,7 +460,7 @@ if (!Object.prototype.nameOf) {
 	 *
 	 * @return	String
 	 */
-	Object.defineProperty(Object.prototype, "nameOf", {
+	defineProperty(Object.prototype, "nameOf", {
 		enumerable: false,
 		value: function(){
 			return "".concat(this).replace(/^.*function\s+([^\s]*|[^\(]*)\([^\x00]+$/, "$1") || "anonymous";
@@ -350,9 +468,9 @@ if (!Object.prototype.nameOf) {
 	});
 }
 
-if (!Object.prototype.walk) {
+if (!Object.prototype.walk && !dumbBrowser) {
 	// Walk over objects
-	Object.defineProperty(Object.prototype, 'walk', {
+	defineProperty(Object.prototype, 'walk', {
 		enumerable: false,
 		value: function(o, fn) { // Recursively apply the given function to non-iterable items (iterating automatically over those which can be iterated)
 			for (var p in o){
@@ -385,7 +503,7 @@ if (!Object.prototype.keys) {
 				'constructor'
 			],
 			dontEnumsLength = dontEnums.length;
-			Object.defineProperty(Object.prototype, 'keys', {
+			defineProperty(Object.prototype, 'keys', {
 				enumerable: false,
 				value: function(obj){
 					if(typeof obj !== 'object' && typeof obj !== 'function' || obj === null) throw new TypeError('Object.keys called on non-object')
@@ -415,7 +533,7 @@ if (!String.prototype.trim) {
 	 *
 	 * @return String
 	 */
-	Object.defineProperty(String.prototype, "trim", {
+	defineProperty(String.prototype, "trim", {
 		enumerable: false,
 		value: function() {
 			return this.replace(/^\s*/,'').replace(/\s*^/, '').replace(/\r\n/,'');
@@ -431,7 +549,7 @@ if (!String.prototype.quote) {
 	 *
 	 * @return String
 	 */
-	Object.defineProperty(String.prototype, "quote", {
+	defineProperty(String.prototype, "quote", {
 		enumerable: false,
 		value: function(delim, escaper) {
 			var delim = typeof delim == 'string' ? delim : '"'; // Default: double quote
@@ -442,15 +560,15 @@ if (!String.prototype.quote) {
 	});
 }
 
-if (!String.prototype.escapejQuerySelector) {
+if (!String.escapejQuerySelector) {
 	/**
-	 * String.prototype.escapejQuerySelector()
+	 * String.escapejQuerySelector()
 	 *
 	 * Escape the following jQuery selector characters: #;&,.+*~':"!^$[]()=>|/%
 	 *
 	 * @return String
 	 */
-	Object.defineProperty(String.prototype, "escapejQuerySelector", {
+	defineProperty(String.prototype, "escapejQuerySelector", {
 		enumerable: false,
 		value: function(escaper) {
 			var escaper = typeof escaper == 'string' ? escaper : "\\"; // Default: single backslash
@@ -470,7 +588,7 @@ if (!String.prototype.reverse) {
 	 *
 	 * @return String
 	 */
-	Object.defineProperty(String.prototype, "reverse", {
+	defineProperty(String.prototype, "reverse", {
 		enumerable: false,
 		value: function(trickMethod){
 			if(trickMethod === false){
@@ -496,7 +614,7 @@ if (!Array.prototype.has) {
 	 *
 	 * @return Boolean
 	 */
-	Object.defineProperty(Array.prototype, "has", {
+	defineProperty(Array.prototype, "has", {
 		enumerable: false,
 		value: function(o) {
 			return this.indexOf(o) > -1;
@@ -510,7 +628,7 @@ if (!Array.prototype.without) {
 	 *
 	 * Returns an Array without the object
 	 */
-	Object.defineProperty(Array.prototype, "without", {
+	defineProperty(Array.prototype, "without", {
 		enumerable: false,
 		value: function(o) {
 			var index = this.indexOf(o);
@@ -532,7 +650,7 @@ if (!Array.prototype.remove) {
 	 *
 	 * @return Boolean
 	 */
-	Object.defineProperty(Array.prototype, "remove", {
+	defineProperty(Array.prototype, "remove", {
 		enumerable: false,
 		value: function(o) {
 			var index = this.indexOf(o);
@@ -551,7 +669,7 @@ if (!Array.prototype.add) {
 	 *
 	 * @return Boolean
 	 */
-	Object.defineProperty(Array.prototype, "add", {
+	defineProperty(Array.prototype, "add", {
 		enumerable: false,
 		value: function(o) {
 			var index = this.indexOf(o);

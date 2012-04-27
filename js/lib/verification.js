@@ -164,7 +164,7 @@ var verify = exports.verify = function(data, rules, throwExceptions, path){
 
 					// The value should be an instanceof
 					if(rule.hasOwnProperty('instanceof')){
-						var iof = Object.getOwnPropertyDescriptor(rule, 'instanceof').value;
+						var iof = rule['instanceof'];
 						if(!(value instanceof iof)){
 							var message = 'Field ' + fieldName + ' was not an instance of ' + (typeof iof.nameOf == 'function' ? iof.nameOf() : 'the required type');
 							error(fieldPath, extend(e, { type: 'InvalidInstance', message: message }), rtn);
@@ -174,7 +174,7 @@ var verify = exports.verify = function(data, rules, throwExceptions, path){
 					// Check the field's constructor
 					if(rule.hasOwnProperty('constructor')){
 						// The value should have a constructor of the given type
-						if(!(value.constructor == Object.getOwnPropertyDescriptor(rule, 'constructor').value /* Reference to the actual constructor property, not Object */)){
+						if(value.constructor !== rule.constructor /* Reference to the actual constructor property, not Object */){
 							var message = 'Field ' + fieldName + ' was not constructed with ' + (typeof rule.constructor.nameOf == 'function' ? rule.constructor.nameOf() : 'the required constructor');
 							error(fieldPath, extend(e, { type: 'InvalidConstructor', message: message }), rtn);
 						}
