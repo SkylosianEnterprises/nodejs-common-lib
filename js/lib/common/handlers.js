@@ -147,12 +147,21 @@ var flush = exports.flush = function(req, res){
  * @param	extra	extra data to be extended onto the output
  */
 var ok = exports.ok = function(req, res, data, extra){
-	res._output = { ok: 1, data: data };
+	res._output = { ok: true };
 
+	// Add data if there is any
+	if(data){
+		res._output.data = data;
+	}
+
+	// Extend the response with extra
 	if(extra && typeof extra == 'object' && extra.constructor == Object){
 		res._output.extend(extra, false); // Append any extra attributes on
 	}
 
+	console.log('Writing: ' + JSON.stringify(res._output));
+
+	// Flush it
 	flush(req, res);
 };
 
@@ -163,12 +172,19 @@ var ok = exports.ok = function(req, res, data, extra){
  * @param res httpResponse
  */
 var error = exports.error = function(req, res, err, extra){
-	res._output = { ok: 0, error: 1, error: err };
+	res._output = { ok: false, error: true };
 
+	// Add err if there is any
+	if(err){
+		res._output.error = err;
+	}
+
+	// Extend the response with extra
 	if(extra && typeof extra == 'object' && extra.constructor == Object){
 		res._output.extend(extra, false); // Append any extra attributes on
 	}
 
+	// Flush it
 	flush(req, res);
 };
 
@@ -195,9 +211,7 @@ var populateUser = exports.populateUser = function(req, res, next) {
 		}
 	}
 	catch(e) {
-		console.warn(e);
-		req._output_struct = e.extend({'ok': false, 'error': true}, false);
-		flush(req, res);
+		error(req, res, e);
 	}
 };
 
@@ -221,9 +235,7 @@ var populateUserIfExists = exports.populateUserIfExists = function(req, res, nex
 		next();
 	}
 	catch(e) {
-		console.warn(e);
-		req._output_struct = e.extend({'error': true}, false);
-		flush(req, res);
+		error(req, res, e);
 	}
 };
 
@@ -234,7 +246,6 @@ var spamCheck = exports.spamCheck = function(req, res, next){
 	}else if(req.query && req.query.value){
 		input = req.query.value;
 	}
-	console.log(input);
 
 	try {
 		if(!input){
@@ -246,14 +257,11 @@ var spamCheck = exports.spamCheck = function(req, res, next){
 		}
 	}
 	catch (e) {
-		console.warn(e);
-		req._output_struct = e.extend({'ok': false, 'error': true}, false);
-		flush(req, res);
+		error(req, res, e);
 		return;
 	}
 
-	req._output_struct = {ok: true};
-	flush(req, res);
+	ok(req, res);
 };
 
 // This is dirty but it'll work for everything
@@ -298,15 +306,8 @@ var getLib = exports.getLib = function(req, res, next, raw){
 	}
 };
 
-var getRules = exports.getRules = function(req, res, next){
-	req._output_struct = req.ctx.rules;
-	flush(req, res);
-};
-
 var exit = exports.exit = function(req, res, next){
 	req._output_struct = {pid: process.pid}
 	flush(req, res);
 	process.exit();
 };
-
-
