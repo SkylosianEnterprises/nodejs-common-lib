@@ -541,15 +541,15 @@ if (!String.prototype.trim) {
 	});
 }
 
-if (!String.prototype.quote) {
+if (!String.prototype.addquotes) {
 	/**
-	 * String.prototype.quote(delim)
+	 * String.prototype.addquotes(delim)
 	 *
 	 * Quotes the string with delim (default double quote) (and escapes instances of delim inside of string with \)
 	 *
 	 * @return String
 	 */
-	defineProperty(String.prototype, "quote", {
+	defineProperty(String.prototype, "addquotes", {
 		enumerable: false,
 		value: function(delim, escaper) {
 			var delim = typeof delim == 'string' ? delim : '"'; // Default: double quote
