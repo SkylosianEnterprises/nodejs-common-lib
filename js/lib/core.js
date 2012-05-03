@@ -88,9 +88,9 @@ if(dumbBrowser){
 	};
 }
 
-if (!Array.prototype.forEach) {
-	// Emulate forEach
-	defineProperty(Array.prototype, "forEach", {
+if (!Array.prototype.each) {
+	// Emulate forEach (don't call this forEach because firefox has one)
+	defineProperty(Array.prototype, "each", {
 		enumerable: false,
 		value: function(f){
 			for(var i = 0; i < this.length; i++){
@@ -99,9 +99,9 @@ if (!Array.prototype.forEach) {
 		}
 	});
 }
-if (!Array.forEach) {
-	// Shim reference for Array.forEach in environments with native forEach
-	Object.defineProperty(Array, 'forEach', {value: Array.prototype.forEach});
+if (!Array.each) {
+	// Shim reference for Array.each in environments with native forEach
+	Object.defineProperty(Array, 'each', {value: Array.prototype.forEach});
 }
 
 if (!Object.prototype.keys) {
@@ -154,7 +154,7 @@ if (!Object.prototype.extend && !dumbBrowser) {
 			var existingPropsOnly = existingPropsOnly == false ? false : true;
 			var props = Object.getOwnPropertyNames(from);
 			var dest = this;
-			Array.forEach.call(props, function(name) {
+			Array.each.call(props, function(name) {
 				if (!existingPropsOnly || name in dest) {
 					var destination = Object.getOwnPropertyDescriptor(from, name);
 					if(Object.isPlainObject(from[name]) && name != '_id'){
@@ -308,7 +308,7 @@ if (!Object.prototype.serializeDates) {
 			if(o instanceof Date){
 				o = {'$date': o.getTime()};
 			}else if(o instanceof Array){
-				Array.forEach.call(o, function(i){ Object.serializeDates.call(i, level + 1); });
+				Array.each.call(o, function(i){ Object.serializeDates.call(i, level + 1); });
 			}else if(typeof o == 'object'){
 				for(var k in o){
 					if(o[k] != null && typeof o[k] == 'object' && o[k] instanceof Date){
@@ -318,7 +318,7 @@ if (!Object.prototype.serializeDates) {
 						Object.serializeDates.call(o[k], level + 1);
 					}else if(o[k] instanceof Array){
 						// In the case of an array of dates
-						Array.forEach.call(o[k], function(v, i, o){
+						Array.each.call(o[k], function(v, i, o){
 							if(v instanceof Date){
 								o[i] = {'$date': v.getTime()};
 							}else if(Object.isPlainObject(v)){
@@ -360,7 +360,7 @@ if (!Object.prototype.unserializeDates) {
 			}else if(o instanceof Array){
 				// It's an array, unserialize every item inside it
 				clonedObject = [];
-				Array.forEach.call(o, function(i){ clonedObject.push(Object.unserializeDates.call(i, level + 1)); });
+				Array.each.call(o, function(i){ clonedObject.push(Object.unserializeDates.call(i, level + 1)); });
 			}else if(Object.isPlainObject(o)){
 				clonedObject = {};
 				// It's an iterable hash
@@ -372,7 +372,7 @@ if (!Object.prototype.unserializeDates) {
 					}else if(o[k] instanceof Array){
 						// In the case of an array of dates
 						clonedObject = [];
-						Array.forEach.call(o[k], function(v, i, o){ if(Object.isPlainObject(v) && v['$date'] && !isNaN(parseInt(v['$date'], 10)) ){ clonedObject[i] = new Date(v['$date']); } } );
+						Array.each.call(o[k], function(v, i, o){ if(Object.isPlainObject(v) && v['$date'] && !isNaN(parseInt(v['$date'], 10)) ){ clonedObject[i] = new Date(v['$date']); } } );
 					}else{
 						clonedObject = o;
 					}
