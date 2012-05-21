@@ -496,7 +496,7 @@ if (!Object.prototype.walk) {
 			for (var p in o){
 				if (o.hasOwnProperty(p)){
 					// If it's an object, or it's an array and they want to automatically iterate arrays
-					if (Object.isPlainObject(o[p]) || (Array.isArray(o[p]) && arrays)){
+					if (Object.isPlainObject(o[p]) || (o[p] instanceof Array && arrays)){
 						Object.walk.call(o[p], fn);
 					}else{
 						// Otherwise we have no idea what it is, just run the method on it directly and store the returned result in place
@@ -515,6 +515,45 @@ if (!Array.prototype.walk) {
 	defineProperty(Array.prototype, 'walk', {
 		enumerable: false,
 		value: Object.walk
+	});
+}
+
+if (!Object.prototype.dotPathValue) {
+	/**
+	 * Create the full "path" (and nothing more than what's required) given in the name
+	 * e.g. "a.b.1.b" would result in  { a: { b: [ null, {b: node.value} ] } }
+	 *
+	 * @param	path	The dot-separated path
+	 * @param	value	The value to store at the end of the chain
+	 * @return	this
+	 */
+	defineProperty(Object.prototype, 'dotPathValue', {
+		enumerable: false,
+		value: function(path, value){
+			var ref = this; // Start ref at the top level of the object
+			// For each dot-separated section, that will require a new object or array
+			var components = path.split('.');
+			// For each dot-separated component, initialize the array/object if necessary
+			// Once we're at the end, store value inside of it
+			for(var i = 0; i < components.length; i++){
+				var c = components[i];
+				var isLast = (components.length - 1 == i) ? true : false; // Last path component, prepare to store the value
+				var isArr = (!isLast && !components[i + 1].match(/[^0-9]/)) ? true : false; // The next path component is a number so it's an array key
+
+				// If this level hasn't already been initialized, initialize it if there are further levels deep to go
+				if(!ref[c] && !isLast) ref[c] = (isArr ? [] : {});
+
+				if(isLast){
+					// Store the value
+					ref[c] = value;
+				}else{
+					// Update the reference to point to our current position
+					ref = ref[c];
+				}
+			}
+
+			return this;
+		}
 	});
 }
 
