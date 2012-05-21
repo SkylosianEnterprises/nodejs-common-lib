@@ -468,23 +468,53 @@ if (!Object.prototype.nameOf) {
 	});
 }
 
-if (!Object.prototype.walk && !dumbBrowser) {
-	// Walk over objects
+if (!Object.prototype.walk) {
+	/**
+	 * Recursively apply the given function to non-iterable items (iterating automatically over those which can be iterated)
+	 *
+	 * @param	obj		The object
+	 * @param	fn		The function to run on each non-iterable item
+	 * @param	array	Boolean to iterate arrays or pass them to the walk method, false to pass them to the function directly (default is true)
+	 */
 	defineProperty(Object.prototype, 'walk', {
 		enumerable: false,
-		value: function(o, fn) { // Recursively apply the given function to non-iterable items (iterating automatically over those which can be iterated)
+		value: function(o, fn, arrays) {
+			// Optionally they may skip the object argument and pass it as context (this)
+			if(typeof o == 'function'){
+				// Shift all the arguments up one
+				arrays = fn;
+				fn = o;
+				o = this;
+			}
+			var arrays = arrays === false ? false : true; // Default to true
+			if(!Object.isPlainObject(o) && !o instanceof Array){
+				console.log('Invalid use of walk: call on iterable items only (objects, arrays)');
+				return false;
+			}
+
+			// Actually iterate the elements
 			for (var p in o){
 				if (o.hasOwnProperty(p)){
-					if (Array.isArray(o[p]) || Object.isPlainObject(o[p])){
-						// It's a normal array or object, iterate it
-						walk(o[p], fn);
+					// If it's an object, or it's an array and they want to automatically iterate arrays
+					if (Object.isPlainObject(o[p]) || (Array.isArray(o[p]) && arrays)){
+						Object.walk.call(o[p], fn);
 					}else{
 						// Otherwise we have no idea what it is, just run the method on it directly and store the returned result in place
+						// Passes: value, key, container
 						o[p] = fn(o[p], p, o);
 					}
 				}
 			}
+
+			return o;
 		}
+	});
+}
+// Add an alias from Array.walk to Object.walk
+if (!Array.prototype.walk) {
+	defineProperty(Array.prototype, 'walk', {
+		enumerable: false,
+		value: Object.walk
 	});
 }
 
