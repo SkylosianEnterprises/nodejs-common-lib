@@ -297,6 +297,7 @@ if (!Object.prototype.serializeDates) {
 	defineProperty(Object.prototype, "serializeDates", {
 		enumerable: false,
 		value: function(level){
+			var clonedObject;
 			var level = level > 0 ? level : 1; // Recursion level, for reference and preventing infinite recursion
 			if(level > 10){
 				// This probably means you passed a circular reference, but rather than allow node to crash itself we should just stop trying
@@ -306,28 +307,40 @@ if (!Object.prototype.serializeDates) {
 
 			var o = this;
 			if(o instanceof Date){
-				o = {'$date': o.getTime()};
+				clonedObject = {'$date': o.getTime()};
 			}else if(o instanceof Array){
-				Array.each.call(o, function(i){ Object.serializeDates.call(i, level + 1); });
+				clonedObject = [];
+				Array.each.call(o, function(i){ clonedObject.push(Object.serializeDates.call(i, level + 1)); });
 			}else if(typeof o == 'object'){
+				clonedObject = {};
 				for(var k in o){
 					if(o[k] != null && typeof o[k] == 'object' && o[k] instanceof Date){
 						var time = o[k].getTime();
-						o[k] = {'$date': time};
+						clonedObject[k] = {'$date': time};
 					}else if(o[k] != null && typeof o[k] == 'object' && !(o[k] instanceof Array)){
-						Object.serializeDates.call(o[k], level + 1);
+						clonedObject[k] = Object.serializeDates.call(o[k], level + 1);
 					}else if(o[k] instanceof Array){
-						// In the case of an array of dates
+						// In the case of an array
+						clonedObject[k] = [];
 						Array.each.call(o[k], function(v, i, o){
 							if(v instanceof Date){
-								o[i] = {'$date': v.getTime()};
+								// It's a date
+								clonedObject[k][i] = {'$date': v.getTime()};
 							}else if(Object.isPlainObject(v)){
-								Object.serializeDates.call(o[i], level + 1);
+								// It could have sub-elements
+								clonedObject[k][i] = Object.serializeDates.call(v, level + 1);
+							}else{
+								// Just copy the value
+								clonedObject[k][i] = o[i];
 							}
 						});
+					}else{
+						clonedObject[k] = o[k];
 					}
 				}
 			}
+
+			return clonedObject;
 		}
 	});
 }
@@ -347,6 +360,8 @@ if (!Object.prototype.unserializeDates) {
 		value: function(level){
 			var clonedObject;
 			var level = level > 0 ? level : 1; // Recursion level, for reference and preventing infinite recursion
+				console.log(level);
+				console.dir(this);
 			if(level > 10){
 				// This probably means you passed a circular reference, but rather than allow node to crash itself we should just stop trying
 				throw { message: 'Too much recursion in unserializeDates, perhaps you passed a circular reference?', type: 'TooMuchRecursionException' };
@@ -371,13 +386,27 @@ if (!Object.prototype.unserializeDates) {
 						clonedObject[k] = Object.unserializeDates.call(o[k], level + 1);
 					}else if(o[k] instanceof Array){
 						// In the case of an array of dates
-						clonedObject = [];
-						Array.each.call(o[k], function(v, i, o){ if(Object.isPlainObject(v) && v['$date'] && !isNaN(parseInt(v['$date'], 10)) ){ clonedObject[i] = new Date(v['$date']); } } );
+						clonedObject[k] = [];
+						Array.each.call(o[k], function(v, i, o){
+							if(Object.isPlainObject(v) && v['$date'] && !isNaN(parseInt(v['$date'], 10)) ){
+								// It's a date, unserialize it
+								clonedObject[k][i] = new Date(v['$date']);
+							}else if(Object.isPlainObject(v)){
+								// May have sub-elements
+								clonedObject[k][i] = Object.unserializeDates.call(v, level + 1);
+							}else{
+								// Just copy it
+								clonedObject[k][i] = v;
+							}
+						});
 					}else{
-						clonedObject = o;
+						clonedObject[k] = o[k];
 					}
 				}
+			}else{
+				clonedObject = o;
 			}
+
 			return clonedObject;
 		}
 	});
