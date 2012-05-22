@@ -360,8 +360,6 @@ if (!Object.prototype.unserializeDates) {
 		value: function(level){
 			var clonedObject;
 			var level = level > 0 ? level : 1; // Recursion level, for reference and preventing infinite recursion
-				console.log(level);
-				console.dir(this);
 			if(level > 10){
 				// This probably means you passed a circular reference, but rather than allow node to crash itself we should just stop trying
 				throw { message: 'Too much recursion in unserializeDates, perhaps you passed a circular reference?', type: 'TooMuchRecursionException' };
