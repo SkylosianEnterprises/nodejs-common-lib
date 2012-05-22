@@ -51,9 +51,9 @@ var pulse = exports.pulse = function(req, res, next, testCollection){
  */
 var prepareInput = exports.prepareInput = function(req, res, next){
 	try {
-		if(req.body) req.body.unserializeDates();
-		if(req.query) req.query.unserializeDates();
-		if(req.params) req.params.unserializeDates();
+		if(req.body) req.body = req.body.unserializeDates();
+		if(req.query) req.query = req.query.unserializeDates();
+		if(req.params) req.params = req.params.unserializeDates();
 	} catch(e) {
 		console.warn(e);
 		req._output_struct = e.extend({'ok': false, 'error': true}, false);
