@@ -14,6 +14,7 @@ var data = {
 	bool: true,
 	nested: { a: { b: true } },
 	blank: undefined,
+	req: 'derp',
 };
 
 var fields = {
@@ -37,6 +38,7 @@ var fields = {
 				bool:	{ constructor: Boolean }, // check if: bool.constructor == Boolean
 				nested:	{ subdocument: { a: { required: true, subdocument: { b: { required: true, subdocument: {  } } } } } },
 				blank:	{ notblank: true },
+				req:    { requires: 'name' },
 			};
 
 console.dir(data);
@@ -44,6 +46,7 @@ try {
 	var status = verification.verify(data, fields, false, 'a.b' /* fake context for all the variables to live inside*/);
 } catch (e) {
 	console.log(e);
+	console.log(e.stack);
 } finally {
 	if(!status || typeof status == 'undefined'){
 		status = {status: 0};

@@ -25,7 +25,7 @@ var _defaultExpression = exports._defaultExpression = function(type){
 		case 'phone':
 			return /^[0-9\s\-\+\(\)]{7,16}$/;
 		case 'url':
-			return /^[-a-zA-Z0-9@:%_\+.~#?&/=]{2,256}\.[a-z]{2,4}\b(\/[-a-zA-Z0-9@:%_\+.~#?&//=]*)?$/gi;
+			return /^https?:\/\/[-a-zA-Z0-9_\+.]{2,256}\.[a-z]{2,4}(:[0-9]+)?\b(\/[-a-zA-Z0-9@:%_\+.~#?&//=]*)?$/gi;
 		default:
 			return /.*/g;
 	}
@@ -73,7 +73,9 @@ var verify = exports.verify = function(data, rules, throwExceptions, path){
 
 		// If this field is a value itself, create a status indicator
 		if(!rule.array && !rule.subdocument){
-			rtn.fields[fieldPath] = true; // Default to good status, then one-by-one check the rules and flip to false at any time
+			if(typeof rtn.fields[fieldPath] == 'undefined'){ // If they haven't already defined the field's status
+				rtn.fields[fieldPath] = true; // Default to good status, then one-by-one check the rules and flip to false at any time
+			}
 		}
 
 		// Munge the data into an array no matter what it is, to make it easier to work with
@@ -118,6 +120,8 @@ var verify = exports.verify = function(data, rules, throwExceptions, path){
 			// Read the rules declaration and parse all the generic things we have to check for, one by one, and throw up exceptions (or collect them in an array) wherever there are problems
 			// Exceptions should be in the form: { type: 'Type', field: fieldName, path: fieldPath, message: 'Something descriptive that explains what was wrong with the field' }
 			// Or   extend(e, { type: 'Type', message: 'Friendly message' }, rtn)   to avoid specifying field and path
+
+			// Check if we have a value to work with
 			if(value == '' || typeof value == 'undefined' || value == null || (value instanceof Array && value.length == 0)){
 				// No value
 				// If it's required and not supposed to be a subdocument
@@ -132,6 +136,20 @@ var verify = exports.verify = function(data, rules, throwExceptions, path){
 					error(fieldPath, extend(e, { type: 'IncompleteField', message: 'Field ' + fieldName + ' was defined but blank' }), rtn);
 				}
 			}else{
+				// Check for requires (if this field exists, make sure each other field it requires exists)
+				if(rule.requires){
+					var requires = rule.requires instanceof Array ? rule.requires : [ rule.requires ]; // Fudge it into an array
+					for(var p = 0; p < requires.length; p++){
+						var requiredField = requires[p];
+						var f = data[requiredField];
+						console.log([requiredField, f]);
+						if(f == '' || typeof f == 'undefined' || f == null || (f instanceof Array && f.length == 0)){
+							console.log('it was blank, error');
+							error(requiredField, { field: requiredField, path: path + requiredField, type: 'RequiredField', message: 'Required field ' + requiredField + ' was ' + (f instanceof Array ? 'empty' : 'undefined') }, rtn);
+						}
+					}
+				}
+
 				// See if the rule structure defines this field as a subdocument -- if so run just those rules against just this field and roll it all up
 				if(rule.subdocument){
 					if(typeof value != 'object' || value.constructor != Object){
