@@ -134,9 +134,13 @@ var flush = exports.flush = function(req, res){
 
 	try {
 		res.end(output);
+		return output;
 	} catch(e) {
 		console.warn(e);
+		return e;
 	}
+
+	return false;
 };
 
 /**
@@ -159,10 +163,8 @@ var ok = exports.ok = function(req, res, data, extra){
 		res._output.extend(extra, false); // Append any extra attributes on
 	}
 
-	console.log('Writing: ' + JSON.stringify(res._output));
-
 	// Flush it
-	flush(req, res);
+	return flush(req, res);
 };
 
 /**
@@ -185,7 +187,7 @@ var error = exports.error = function(req, res, err, extra){
 	}
 
 	// Flush it
-	flush(req, res);
+	return flush(req, res);
 };
 
 /**
