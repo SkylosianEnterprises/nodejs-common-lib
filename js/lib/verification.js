@@ -31,7 +31,7 @@ var _defaultExpression = exports._defaultExpression = function(type){
 	}
 };
 
-// TODO: Break all these out
+// TODO: Break all these out into separate functions or something a little neater
 var verify = exports.verify = function(data, rules, throwExceptions, path){
 	var path = (typeof path == 'undefined') ? '' : path + '.'; // Just a nice reference to work with subdocuments
 	var rtn = { error: false, errors: [], fields: {}, badFields: [] };
@@ -142,9 +142,7 @@ var verify = exports.verify = function(data, rules, throwExceptions, path){
 					for(var p = 0; p < requires.length; p++){
 						var requiredField = requires[p];
 						var f = data[requiredField];
-						console.log([requiredField, f]);
 						if(f == '' || typeof f == 'undefined' || f == null || (f instanceof Array && f.length == 0)){
-							console.log('it was blank, error');
 							error(requiredField, { field: requiredField, path: path + requiredField, type: 'RequiredField', message: 'Required field ' + requiredField + ' was ' + (f instanceof Array ? 'empty' : 'undefined') }, rtn);
 						}
 					}
