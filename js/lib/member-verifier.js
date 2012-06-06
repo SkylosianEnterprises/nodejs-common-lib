@@ -100,7 +100,7 @@ var _rules = exports.rules = {
     "promote_my_profile"           : { "constructor": Boolean },
 
     // Meta-data fields
-    "url_slug"                     : { match: /^[A-Za-z0-9\-\._]+$/, maxlength: 50, notblank: true }, // notblank behaves like require except it only checks the field if it is defined
+    "url_slug"                     : { match: /^[a-z0-9\-_]+$/, maxlength: 50, notblank: true }, // notblank behaves like require except it only checks the field if it is defined
     "activated"                    : { internal: true, type: "date" },
     "alt_email_activated"          : { internal: true },
     "register_timestamp"           : { internal: true, type: "date" },
