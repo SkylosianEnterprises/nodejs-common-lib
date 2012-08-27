@@ -64,19 +64,22 @@ var _rules = exports.rules = {
     "links"                        : { array: true, maxcount: 10, subdocument: {
                                              name:         { required: true, maxlength: 250 },
                                              url:          { required: true, maxlength: 2083, type: 'url' }, // Yup. 2083.
-                                             description:  { required: true, maxlength: 300 }
+                                             description:  { required: true, maxlength: 300 },
+	                                         date: { required: true, "instanceof": Date }
                                          }
                                      },
     "favorite_sites"               : { array: true, maxcount: 10, subdocument: {
                                              name:         { required: true, maxlength: 250 },
                                              url:          { maxlength: 2083, type: 'url' }, // Yup. 2083.
-                                             description:  { required: true, maxlength: 300 }
+                                             description:  { required: true, maxlength: 300 },
+                                             date: { required: true, "instanceof": Date }
                                          }
                                      },
     "quotes"                       : { array: true, maxcount: 10, subdocument:
                                          {
                                              by:     { required: true, maxlength: 100 },
-                                             quote:  { required: true, maxlength: 500 }
+                                             quote:  { required: true, maxlength: 500 },
+	                                         date: { required: true, "instanceof": Date }
                                          }
                                      },
     "intentions"                   : { maxcount: 10, subdocument:
