@@ -1,2 +1,4 @@
-require.paths.unshift(__dirname+'/lib');
+exports.core = require('lib/core');
+exports.member-verifier = require('lib/jsmember-verifier.js');
+exports.verification = require('lib/verification');
 

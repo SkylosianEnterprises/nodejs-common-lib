@@ -1,8 +1,9 @@
 { "name" : "common"
 , "description" : "Manta member services common core library"
-, "main" : "index.js"
+, "main" : "lib/core.js"
 , "author" : "Manta Media"
-, "version" : "0.1.1"
+, "version" : "1.0.0-0"
+, "engines" :  { "node": ">0.8" }
 , "repository" :
 	{ "type" : "svn"
 	, "url" : "http://subversion/svn/main/common-lib/trunk/js"
