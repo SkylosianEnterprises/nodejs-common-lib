@@ -2,7 +2,7 @@
 , "description" : "Manta member services common core library"
 , "main" : "lib/core.js"
 , "author" : "Manta Media"
-, "version" : "1.0.0-0"
+, "version" : "1.0.0-1"
 , "engines" :  { "node": ">0.8" }
 , "repository" :
 	{ "type" : "svn"
