@@ -4,8 +4,8 @@
 
 var fs = require('fs');
 
-var manta_session = require('util/manta_session');
-var manta_member = require('util/manta_member');
+var manta_session = require('../../util/manta_session');
+var manta_member = require('../../util/manta_member');
 var bw = require('util/bad_words');
 
 /**
