@@ -1,0 +1,40 @@
+var _badWords = exports.badWords = ['addict','air head','airhead','air-head','ambulance chaser','asinine','ass','ass h0les','ass hole','asses','assh0le','ass-h0le','assh0les','assh0les','ass-h0les','asshole','ass-hole','assholes','ass-holes','b!+ch','b!tch','b17ch','b1tch','bastard','bastards','bi+ch','bitch','bitches','bl0w j0b','bl0w job','bl0wj0b','bl0w-j0b','bl0wjob','bl0w-job','blow j0b','blow job','blowj0b','blow-j0b','blowjob','blow-job','bugger','c0cksucker','c0ck-sucker','cheat','cheater','child abuser','child molester','cock','cock sucker','cock-sucker','conartist','con-artist','conman','con-man','conned','crap','crappy','cunt','cunts','cut throat','cutthroat','cut-throat','deceitful','defraud','dick','dildo','dishonest','dis-honest','douche bag','douchebag','drug-addict','dum ass','dumass','dumb ass','dumb asses','dumb assh0le','dumb asshole','dumbass','dumbasses','dummass','embezzelor','embezzle','embezzled','embezzlement','embezzler','embezzles','embezzling','faker','fakery','fat ass','fat slob','fatass','fatslob','fcuk','fornicate','fornicated','fornicating','fornication','fornicator','fraud','frauder','fraudulent','fuck','fucker','fuk','fukker','good 4 nothing','good for nothing','good4nothing','goodfornothing','good-for-nothing','grope','groper','hack','hooligan','hore','hores','incest','incestuous','jack ass','jackass','jerk','jerk off','jerkoff','lazy','lesbian','loser','masterbat3','masterbater','masturbate','molester','mother fuck','mother fucker','motherfuck','n!gger','n1gger','nigga','nigger','no good','nogood','nutsack','orgasm','pedofile','pedophile','penis','penis head','penishead','phuck','phuk','porn','pornographic','pornography','prostitute','pusher','pussy','quack','rape','raper','rapist','rip off','ripoff','rip-off','ripping off','rippingoff','ripping-off','scam','scammer','scoundrel','scoundrle','sexist','sh!t','sh!thead','sh!tty','shark','shemale','shenanigan','shister','shit','shit head','shit heads','shithead','shithead','shitheads','shit-heads','shitty','short-change','short-changed','shyster','son of a bitch','sonofabitch','son-of-a-bitch','steal','stealer','stealing','stole','stupid ass','stupid head','stupid-ass','stupider','stupid-head','stupido','swindle','swindler','swindling','thief','thiefs','thieve','thieves','thievish','thievishly','thievishness','transexual','transsexual','trans-sexual','transvestite','transvestites','trickster','welcher','wh0r','wh0re','wh0red','wh0res','wh0ring','wh0rish','whoar','whoars','whor','whore','whored','whores','whoring','whorish','whors','5h1t', 'a_s_s', 'a55', 'anal', 'anus', 'ar5e', 'arr5e', 'arse', 'assfuck', 'ass-fuck', 'assfucker', 'ass-fucker', 'assfukka', 'ass-fukka', 'asswhole', 'b00b', 'b00bs', 'ballsack', 'beastiality', 'bestial', 'betial', 'bitcher', 'bitchin', 'bitching', 'bitchy', 'buttmuch', 'buttplug', 'c0cksuck', 'c0cksuckir', 'cl1t', 'cl1toris', 'clit', 'clitoris', 'cocksuck', 'cocksucka', 'cocksucker', 'cocksucking', 'cocksukka', 'cocksukker', 'cocksukkir', 'coclsuckir', 'coksucka', 'crapper', 'crapping', 'cum', 'cummer', 'cumming', 'cumshot', 'cunilingus', 'cunillingus', 'cunnilingus', 'cuntlick', 'cuntlicking', 'cuntlik', 'cuntliking', 'cyberfuc', 'cyberfuck', 'cyberfucked', 'cyberfucking', 'cyberfucks', 'dick head', 'dickhead', 'dildos', 'dog-fucker', 'dog-fukka', 'dog-fukker', 'douche', 'duche', 'dyke', 'f1ngerfucking', 'f1stfucked', 'f1stfucker', 'f1stfucking', 'f1stfucks', 'f1stfukka', 'f1stfukked', 'f1stfuks', 'fag', 'faggot', 'faggots', 'fagot', 'fagots', 'fags', 'felat10', 'felat1o', 'felatio', 'fellat10', 'fellat1o', 'fellatio', 'fingerfuck', 'fingerfucker', 'fingerfucking', 'fingerfucks', 'fingerfukka', 'fingerfukker', 'fistfucked', 'fistfucker', 'fist-fucker', 'fistfucking', 'fist-fucking', 'fistfuckings', 'fistfucks', 'fistfukka', 'fist-fukka', 'fistfukking', 'fistfuks', 'fuchwhit', 'fucka', 'fucked', 'fuckers', 'fuckhead', 'fuck-head', 'fuckin', 'fucking', 'fuckings', 'fuckingshitmotherfucker', 'fuckme', 'fucks', 'fuckwit', 'fuckwith', 'fudge packer', 'fudge pakker', 'fudgepacker', 'fudge-packer', 'fudge-pakker', 'fuker', 'fukka', 'fukkin', 'fukwhit', 'fukwit', 'fukwith', 'gangbang', 'gangbanger', 'gangbangs', 'gaysex', 'goddam', 'god-dam', 'god-dammed', 'god-damn', 'god-damned', 'hardcoresex', 'heshe', 'hoar', 'hoare', 'hoer', 'homo', 'hore', 'horney', 'hornie', 'horniest', 'horny', 'hotsex', 'hot-sex', 'jac0ff', 'jack0ff', 'jack-0ff', 'jackoff', 'jack-off', 'jacoff', 'jak0ff', 'jakoff', 'jak-off', 'jerc-0ff', 'jerc-0ff', 'jercoff', 'jerk-0ff', 'jerk-off', 'kock', 'kum', 'kummer', 'kumming', 'kummings', 'kums', 'kunilingus', 'kunillingus', 'kunnilingus', 'l3i+ch', 'l3itch', 'labia', 'lmfao', 'lust', 'lusting', 'lusting', 'm0f0', 'm0fo', 'm45terbate', 'ma5terb8', 'masochist', 'masterb8', 'masterbat*', 'master-bate', 'masterbation', 'masterbations', 'masturbating', 'mofo', 'mo-fo', 'molesting', 'mothafuck', 'mothafucka', 'mothafuckas', 'mothafuckaz', 'mothafucked', 'mothafucker', 'mothafuckers', 'mothafuckin', 'mothafucking', 'mothafuckings', 'mothafucks', 'motherfucked', 'motherfucker', 'motherfuckers', 'motherfuckin', 'motherfucking', 'motherfucking', 'motherfuckings', 'motherfuckka', 'motherfucks', 'muff', 'mutha', 'muthafecker', 'muthafuckker', 'muther', 'mutherfucker', 'n1gga', 'nazi', 'nigg3r', 'nigg4h', 'niggah', 'niggas', 'niggaz', 'niggers', 'nob', 'nob jokey', 'nobhead', 'nobjocky', 'nobjokey', 'numbnuts', 'orgasim', 'orgasims', 'orgasms', 'p0rn', 'pawn', 'pecker', 'penisfucker', 'phonesex', 'phuck', 'phuk', 'phuked', 'phuking', 'phukked', 'phukking', 'phuks', 'phuq', 'pigfucker', 'pimpis', 'piss', 'pissed', 'pisser', 'pissers', 'pisses', 'pissflaps', 'pissin', 'pissing', 'pissoff', 'poop', 'porno', 'pornos', 'prick', 'pricks', 'pron', 'pube', 'pusse', 'pussi', 'pussies', 'pussy', 'pussys', 'rectum', 'retard', 'rimjaw', 'rimming', 's hit', 's.o.b.', 's_h_i_t', 'sadist', 'schlong', 'screwing', 'scroat', 'scrote', 'scrotum', 'semen', 'sex', 'sh!t', 'sh1t', 'shag', 'shagger', 'shaggin', 'shagging', 'shemale', 'shi+', 'shitdick', 'shite', 'shited', 'shitey', 'shitfuck', 'shitfull', 'shiting', 'shitings', 'shits', 'shitted', 'shitter', 'shitters', 'shitting', 'shittings', 'skank', 'slut', 'sluts', 'smegma', 'smut', 'sociopath', 'suck off', 't1tt1e5', 't1tties', 'teets', 'teez', 'testical', 'testicle', 'tit', 'titfuck', 'tits', 'titt', 'tittie5', 'tittiefucker', 'titties', 'tittyfuck', 'tittywank', 'titwank', 'tosser', 'turd', 'tw4t', 'twat', 'twathead', 'twatty', 'twunt', 'twunter', 'vagina', 'vulva', 'w00se', 'wank', 'wanker', 'wanky', 'xrated'];
+
+var _badWordsExp = exports.badWordsExp = RegExp('\\b(' + _badWords.join('|') + ')\\b');
+
+// This is the same function but it uses a regular expression to match every word at once instead of one at a time
+// In most instances (searching large fields for large lists of bad words) this will perform better
+var hasBadWords = exports.hasBadWords = function(input){
+	if(input){
+		if(_badWordsExp.test(input)){
+			return true;
+		}
+	}
+
+	return false;
+};
+
+// Generally speaking this will run poorly against large input strings compared against a large list of bad words (entries with no bad words will have to run an iteration of b ^ w where b is the number of bad words and w is the number of input words, and best case scenario entries with bad words will have to be early on in the list or early on in the input string)
+// For a speedier comparison in most cases, use hasBadWords (in performance tests it ran 20x better in the worst test)
+// For high-traffic use in checking only a handful of bad words, this will perform much snappier
+var hasBadWords2 = exports.hasBadWords2 = function(input){
+	if(input){
+		var words = input.split(/\b/);
+		for(var i = 0; i < _badWords.length; i++){
+			var badWord = _badWords[i];
+/*
+			// This method is even slower than the regex method below
+			for(var j = 0; j < words.length; j++){
+				if(words[j] == badWord){
+					return true;
+				}
+			}
+*/
+			if(input.match(RegExp('\\b' + badWord + '\\b'))){
+				return true;
+			}
+		}
+	}
+
+	return false;
+};
