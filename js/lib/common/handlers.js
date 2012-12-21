@@ -198,23 +198,29 @@ var error = exports.error = function(req, res, err, extra){
  * @param next Function
  */
 var populateUser = exports.populateUser = function(req, res, next) {
-	try {
-		if(req.cookies && req.cookies.member_session){
-			var cookie_string = req.cookies.member_session;
-			var cookie = manta_session.thaw(cookie_string);
-			if(!(cookie && cookie.data && cookie.data.member && cookie.data.member.sub_id)) {
-				throw { type:'MemberSessionInvalidException', message:'The member session cookie is invalid' };
-			}
-			req.user = cookie.data.member;
-			next();
+		populateUserExpress(req, res, function ( err ) {
+		if (err) return error(req, res, err);
+		return next();
+	} );
+};
+
+var populateUserExpress = exports.populateUserExpress = function(req, res, next) {
+	if(req.cookies && req.cookies.member_session){
+		var cookie_string = req.cookies.member_session;
+		var cookie = manta_session.thaw(cookie_string);
+		if(!(cookie && cookie.data && cookie.data.member && cookie.data.member.sub_id)) {
+			return next (
+				{ type:'MemberSessionInvalidException'
+				, message:'The member session cookie is invalid' 
+				} );
 		}
-		else {
-			throw { type:'MemberSessionUndefinedExcpetion', message:'The member session cookie is undefined' };
-		}
+		req.user = cookie.data.member;
+		return next();
 	}
-	catch(e) {
-		error(req, res, e);
-	}
+	return next(
+		{ type:'MemberSessionUndefinedExcpetion'
+		, message:'The member session cookie is undefined'
+		} );
 };
 
 /**
@@ -225,20 +231,17 @@ var populateUser = exports.populateUser = function(req, res, next) {
  * @param next Function
  */
 var populateUserIfExists = exports.populateUserIfExists = function(req, res, next) {
-	try {
-		if(req.cookies && req.cookies.member_session){
-			var cookie_string = req.cookies.member_session;
-			var cookie = manta_session.thaw(cookie_string);
-			if(!(cookie && cookie.data && cookie.data.member && cookie.data.member.sub_id)) {
-				throw { type:'MemberSessionInvalidException', message:'The member session cookie is invalid' };
-			}
-			req.user = cookie.data.member;
-		}
-		next();
-	}
-	catch(e) {
-		error(req, res, e);
-	}
+	populateUserIfExistsExpress(req, res, function ( err ) {
+		if (err) return error(req, res, err);
+		return next();
+	} );
+};
+
+var populateUserIfExistsExpress = exports.populateUserIfExistsExpress = function(req, res, next) {
+	populateUserExpress(req, res, function ( err ) {
+		if (err && err.type == 'MemberSessionUndefinedExcpetion') return next();
+		return next(err);
+	} );
 };
 
 var spamCheck = exports.spamCheck = function(req, res, next){
