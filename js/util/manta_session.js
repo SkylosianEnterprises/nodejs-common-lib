@@ -58,9 +58,7 @@ exports.thaw = function(input){
 		.replace(/\[S\]/g, '/')
 		.replace(/\[E\]/g, '=');
 	
-	console.log(base64crypt);
 	base64crypt = base64crypt.replace(/^V2=/,'');
-	console.log(base64crypt);
 
 	// Decrypt
 	var plaintext = this.decrypt(base64crypt);
