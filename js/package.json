@@ -1,23 +1,31 @@
-{ "name" : "common"
-, "description" : "Manta member services common core library"
-, "main" : "lib/core.js"
-, "author" : "Manta Media"
-, "version" : "1.1.0-1"
-, "engines" :  { "node": ">0.8" }
-, "repository" :
-	{ "type" : "svn"
-	, "url" : "http://subversion/svn/main/common-lib/trunk/js"
-	}
-, "bugs" : { "url" : "http://trac/trac/main/query?col=id&col=summary&col=status&col=type&col=priority&col=milestone&col=component&keywords=~core-lib-js&order=priority" }
-, "licenses" :
-	[ { "type" : "MANTA"
-		, "url" : "http://manta.com/dont/steal/our/stuff"
-		}
-	]
-, "dependencies" :
-	{
-	}
-, "devDependencies" :
-	{ "jasmine-node" : "<= 1.0.22"
-	}
+{
+  "name": "common-lib"
+  "description": "Manta common js code",
+  "main": "index.js",
+  "author": "Manta Media",
+  "version": "0.2.0-0",
+  "repository": {
+    "type": "svn",
+    "url": "http://github/mantacode/common-lib"
+  },
+  "bugs": {
+    "url": "http://trac/trac/main/query?col=id&col=summary&col=status&col=type&col=priority&col=milestone&col=component&keywords=~manta-rabbit-node-lib&order=priority"
+  },
+  "licenses": [
+    {
+      "type": "MANTA",
+      "url": "http://manta.com/dont/steal/our/stuff"
+    }
+  ],
+  "dependencies": {
+  },
+  "devDependencies": {
+    "jasmine-node": "<= 1.0.22",
+  },
+  "scripts": {
+    "test": "jasmine-node tests"
+  },
+  "publishConfig": {
+    "registry": "http://localhost:8241"
+  }
 }
