@@ -17,7 +17,7 @@
       "url": "http://manta.com/dont/steal/our/stuff"
     }
   ],
-  "dependencies": {
+  "dddependencies": {
     "common": "git+ssh://localhost/home/dihnen/gitcommon-lib"
   },
   "ddependencies": {
