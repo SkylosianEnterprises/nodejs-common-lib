@@ -1,5 +1,5 @@
 {
-  "name": "common-lib"
+  "name": "common-lib",
   "description": "Manta common js code",
   "main": "index.js",
   "author": "Manta Media",
@@ -18,9 +18,13 @@
     }
   ],
   "dependencies": {
+    "common": "git+ssh://localhost/home/dihnen/gitcommon-lib"
+  },
+  "ddependencies": {
+    "common": "git+ssh://git@github.com:mantacode/common-lib.git"
   },
   "devDependencies": {
-    "jasmine-node": "<= 1.0.22",
+    "jasmine-node": "<= 1.0.22"
   },
   "scripts": {
     "test": "jasmine-node tests"
