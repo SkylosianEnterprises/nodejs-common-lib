@@ -1,5 +1,5 @@
 {
-  "name": "nodejs-common-lib"
+  "name": "nodejs-common-lib",
   "description": "Manta common js code",
   "main": "index.js",
   "author": "Manta Media",
