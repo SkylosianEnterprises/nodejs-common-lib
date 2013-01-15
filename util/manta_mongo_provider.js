@@ -7,7 +7,7 @@ exports.builder = function(c, f) {
 	var BSON = mongodb.BSONNative;
 
 	var host = process.env['MONGO_NODE_DRIVER_HOST'] != null ? process.env['MONGO_NODE_DRIVER_HOST'] : 'localhost';
-	var port = process.env['MONGO_NODE_DRIVER_PORT'] != null ? process.env['MONGO_NODE_DRIVER_PORT'] : Connection.DEFAULT_PORT;
+	var port = process.env['MONGO_NODE_DRIVER_PORT'] != null ? parseInt(process.env['MONGO_NODE_DRIVER_PORT']) : Connection.DEFAULT_PORT;
 
 	var Schema = mongoose.Schema;
 	var conschema = new Schema({ name: "mstest" });
