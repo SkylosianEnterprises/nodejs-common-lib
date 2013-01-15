@@ -1,5 +1,4 @@
-var async = require('async');
-
+var async = require('async'); 
 var providerSysTmpl = {
 	cache: {},
 	cfg: {},
