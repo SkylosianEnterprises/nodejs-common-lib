@@ -3,7 +3,7 @@
   "description": "Manta common js code",
   "main": "index.js",
   "author": "Manta Media",
-  "version": "0.2.0-4",
+  "version": "0.2.0-5",
   "repository": {
     "type": "svn",
     "url": "http://github/mantacode/common-lib"
