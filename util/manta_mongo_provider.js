@@ -1,6 +1,5 @@
 var mongoose = require('mongoose');
 exports.builder = function(c, f) {
-	var Db = mongodb.Db;
 	var Connection = mongodb.Connection;
 	var Server = mongodb.Server;
 	var ReplSetServers = mongodb.ReplSetServers;
