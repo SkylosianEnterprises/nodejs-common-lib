@@ -2,7 +2,7 @@ var mongoose = require('mongoose');
 exports.builder = function(c, f) {
 
 	var host = process.env['MONGO_NODE_DRIVER_HOST'] != null ? process.env['MONGO_NODE_DRIVER_HOST'] : 'localhost';
-	var port = parseInt(process.env['MONGO_NODE_DRIVER_PORT'] != null ? parseInt(process.env['MONGO_NODE_DRIVER_PORT']) : throw "Need a node driver port";
+	var port = parseInt(process.env['MONGO_NODE_DRIVER_PORT'] != null ? parseInt(process.env['MONGO_NODE_DRIVER_PORT']) : 27017;
 
 	var connectSchema = mongoose.Schema({ from: String, to: String, id: String, type: String })
 	var Connection = mongoose.model('Connection', connectSchema);
