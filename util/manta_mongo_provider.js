@@ -15,7 +15,7 @@ exports.builder = function(c, f) {
 	var db = mongose.connection;
 	db.on('error', function (err) {
 		f(err, Connection);
-	} ):
+	} );
 	db.once('open', function () {
 		f(null, dbl);
 	} );
