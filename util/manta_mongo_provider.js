@@ -1,9 +1,6 @@
 var mongoose = require('mongoose');
 exports.builder = function(c, f) {
-	var Connection = mongodb.Connection;
-	var Server = mongodb.Server;
-	var ReplSetServers = mongodb.ReplSetServers;
-	var BSON = mongodb.BSONNative;
+	var Connection = mongoose.Connection;
 
 	var host = process.env['MONGO_NODE_DRIVER_HOST'] != null ? process.env['MONGO_NODE_DRIVER_HOST'] : 'localhost';
 	var port = parseInt(process.env['MONGO_NODE_DRIVER_PORT'] != null ? parseInt(process.env['MONGO_NODE_DRIVER_PORT']) : Connection.DEFAULT_PORT);
