@@ -7,7 +7,7 @@ exports.builder = function(c, f) {
 	var connectSchema = mongoose.Schema({ from: String, to: String, id: String, type: String })
 	var Connection = mongoose.model('Connection', connectSchema);
 	mongoose.connect('mongodb://'+host+':'+port+'/mstest');
-	var db = mongose.connection;
+	var db = mongoose.connection;
 	db.on('error', function (err) {
 		f(err, Connection);
 	} );
