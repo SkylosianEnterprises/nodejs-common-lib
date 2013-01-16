@@ -12,7 +12,7 @@ exports.builder = function(c, f) {
 		f(err, Connection);
 	} );
 	db.once('open', function () {
-		f(null, dbl);
+		f(null, db);
 	} );
 	Connection.find( { from: 'srj0gjgxrn9bn3' } );
 };
