@@ -14,5 +14,5 @@ exports.builder = function(c, f) {
 	db.once('open', function () {
 		f(null, db);
 	} );
-	Connection.find( { from: 'srj0gjgxrn9bn3' } );
+	var query = Connection.find( { from: 'srj0gjgxrn9bn3' } );
 };
