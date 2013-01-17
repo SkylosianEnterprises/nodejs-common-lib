@@ -32,7 +32,6 @@ exports.builder = function(c, f) {
 		conn.on('error', function (err) {
 			throw("mongoose Error", err);
 		} );
-		console.log( Connection.find( { from: 'srj0gjgxrn9bn3' } , function (err, rec) { console.log("ERROR:", err, "RECORD:", rec); } ) );
 		f(null, { Connections: Connection, Connections_Archive: Connection_Archive, mongoose: mongoose });
 	} );
 };
