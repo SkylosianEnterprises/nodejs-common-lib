@@ -12,7 +12,7 @@ exports.builder = function(c, f) {
 		})
 	mongoose.connect('mongodb://'+host+':'+port+'/mstest');
 	var Connection = mongoose.model('connections', connectSchema);
-	var Connection_Archive = mongoose.model('connection_archive', connectSchema);
+	var Connection_Archive = mongoose.model('connections_archive', connectSchema);
 
 	var conn = mongoose.connection;
 	// This error handler for connect errors returns to the caller, since there
