@@ -28,5 +28,5 @@ exports.builder = function(c, f) {
 		} );
 		f(null, mongoose);
 	} );
-	console.log(mongoose.model('Connections').find( { from: 'srj0gjgxrn9bn3' } );
+	console.log(mongoose.model('Connections').find( { from: 'srj0gjgxrn9bn3' } ));
 };
