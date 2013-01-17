@@ -16,7 +16,6 @@ exports.builder = function(c, f) {
 		, id: { type: String, required: true }
 		, type: { type: String, required: true }
 		})
-	mongoose.connect('mongodb://'+host+':'+port+'/mstest');
 	var Connection = mongoose.model('connections', connectSchema);
 	var Connection_Archive = mongoose.model('connections_archive', connectArchiveSchema);
 
