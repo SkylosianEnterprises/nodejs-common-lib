@@ -2,21 +2,33 @@ var mongoose = require('mongoose');
 var host = process.env['MONGO_NODE_DRIVER_HOST'] != null ? process.env['MONGO_NODE_DRIVER_HOST'] : 'localhost';
 var port = parseInt(process.env['MONGO_NODE_DRIVER_PORT'] != null ? process.env['MONGO_NODE_DRIVER_PORT'] : 27017);
 mongoose.connect('mongodb://'+host+':'+port+'/mstest');
-var connectArchiveSchema = mongoose.Schema(
-	{ from: { type: String, required: true }
-	, to: { type: String, required: true }
-	, id: { type: String, required: true }
-	, type: { type: String, required: true }
-	})
+
+var ReportSchema = mongoose.Schema(
+// TODO @whomever fill this in
+		);
+
 var connectSchema = mongoose.Schema(
-	{ from: { type: String, required: true }
-	, to: { type: String, required: true }
-	, id: { type: String, required: true }
+	{ from: { 
+		type: { type: String, required: true },
+		id: { type: String, required: true },
+	},
+	  to: {
+		type: { type: String, required: true },
+		id: { type: String, required: true },
+	}
 	, type: { type: String, required: true }
-	})
-var Connection = mongoose.model('connections', connectSchema);
-var Connection_Archive = mongoose.model('connections_archive', connectArchiveSchema);
-//var Connection_Archive = mongoose.model('connections_archive', connectSchema);
+	, subType: { type: String, required: true }
+	, created: { type: Date, required: true }
+	, updated: { type: Date, required: true }
+	, createdBy: { type: String, required: true }
+	, updatedBy: { type: String, required: true }
+	, attrs: { type: mongoose.Schema.Types.Mixed }
+	, reports: { type: ReportSchema }
+	, status: { type: String, required: true }
+	});
+
+var Connection = mongoose.model( 'Connection', connectSchema, 'connections' );
+var Connection_Archive = mongoose.model( 'ConnectionArchive', connectSchema, 'connections_archive' );
 
 exports.builder = function(c, f) {
 
