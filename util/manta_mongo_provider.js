@@ -18,8 +18,8 @@ exports.builder = function(c, f) {
 		, type: { type: String, required: true }
 		})
 	var Connection = mongoose.model('connections', connectSchema);
-	//var Connection_Archive = mongoose.model('connections_archive', connectArchiveSchema);
-	var Connection_Archive = mongoose.model('connections_archive', connectSchema);
+	var Connection_Archive = mongoose.model('connections_archive', connectArchiveSchema);
+	//var Connection_Archive = mongoose.model('connections_archive', connectSchema);
 
 	var conn = mongoose.connection;
 	// This error handler for connect errors returns to the caller, since there
