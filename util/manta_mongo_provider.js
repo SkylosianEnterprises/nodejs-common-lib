@@ -23,7 +23,7 @@ var connectSchema = mongoose.Schema(
 	, createdBy: { type: String, required: true }
 	, updatedBy: { type: String, required: true }
 	, attrs: { type: mongoose.Schema.Types.Mixed }
-	, reports: { type: ReportSchema }
+	, reports: [ ReportSchema ]
 	, status: { type: String, required: true }
 	});
 
