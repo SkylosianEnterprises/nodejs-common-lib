@@ -8,18 +8,18 @@ var ReportSchema = mongoose.Schema(
 		);
 
 var connectSchema = mongoose.Schema(
-	{ from: { 
-		type: { type: String, required: true },
-		id: { type: String, required: true },
-	},
-	  to: {
-		type: { type: String, required: true },
-		id: { type: String, required: true },
-	}
+	{ from: 
+		{ type: { type: String, required: true }
+		, id: { type: String, required: true }
+		}
+	, to:
+		{ type: { type: String, required: true }
+		, id: { type: String, required: true }
+		}
 	, type: { type: String, required: true }
 	, subType: { type: String, required: true }
-	, created: { type: Date, required: true }
-	, updated: { type: Date, required: true }
+	, createdDate: { type: Date, required: true }
+	, updatedDate: { type: Date, required: true }
 	, createdBy: { type: String, required: true }
 	, updatedBy: { type: String, required: true }
 	, attrs: { type: mongoose.Schema.Types.Mixed }
