@@ -24,7 +24,7 @@ var connectSchema = mongoose.Schema(
 	, updatedBy: { type: String, required: false }
 	, attrs: { type: mongoose.Schema.Types.Mixed }
 	, reports: [ ReportSchema ]
-	, status: { type: String, required: true }
+	, status: { type: String, required: false }
 	});
 
 var Connection = mongoose.model( 'Connection', connectSchema, 'connections' );
