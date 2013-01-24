@@ -17,7 +17,7 @@ var connectSchema = mongoose.Schema(
 		, id: { type: String, required: true }
 		}
 	, type: { type: String, required: true }
-	, subType: { type: String, required: true }
+	, subType: { type: String, required: false }
 	, createdDate: { type: Date, required: true }
 	, updatedDate: { type: Date, required: true }
 	, createdBy: { type: String, required: true }
