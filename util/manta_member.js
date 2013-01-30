@@ -18,6 +18,9 @@ exports.decrypt_subid = function(input){
 };
 
 exports.encrypt_subid = function(input){
+	if (input.indexOf('MT') != 0) {
+		return input;
+	}
 	return _remap_base(input, 'XMT0123456789', 'utv9rc7f2j35pqzmlgd8nswxhk1by046');
 };
 
