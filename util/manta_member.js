@@ -1,7 +1,25 @@
 var crypto = require('crypto');
+var request = require('request');
+
+var msHost = process.env['MEMBER_SVC_HOST'] != null ? process.env['MEMBER_SVC_HOST'] : 'localhost';
+var msPort = parseInt(process.env['MEMBER_SVC_PORT'] != null ? process.env['MEMBER_SVC_PORT'] : 8530);
 
 var _secretKey = 'fu2u3@*s@I*Ig834TJJGS238*%@asdjflkasjdfAWIUHG23176wj2384htg@#$R%';
 var _salt = 'Brisket swine drumstick cow corned beef bacon. Tail spare ribs venison, brisket pork ham hock andouille meatball pork belly';
+
+// get member data for the specified list of IDs
+exports.getMemberDetails = function (memberIDs, callback) {
+	var memberURL = 'http://' + msHost + ':' + msPort + '/member/query?cond='+ JSON.stringify({"_id":{"$in": Object.keys(memberIDs) }});
+	console.log("memberURL is:", memberURL);
+	request(memberURL, function(error, response, body) {
+		if (error) return callback(error);
+		try {
+			var memberDataObj = JSON.parse(body) 
+			callback(error, memberDataObj.data);
+		} 
+		catch (e) { callback(e) } 
+	});
+};
 
 // Hash password with the user id
 exports.hashPassword = function(password, userId){
@@ -14,7 +32,15 @@ exports.hashPassword = function(password, userId){
 
 // Encrypt/decrypt manta Sub IDs
 exports.decrypt_subid = function(input){
-	return _remap_base(input, 'utv9rc7f2j35pqzmlgd8nswxhk1by046', 'XMT0123456789');
+        if (subId.indexOf("MT") != 0) return subId;
+        if (subId.indexOf("_") != subId.length-1){
+            subId = subId.substring(0, subId.length-1);
+            return subId;
+        }
+	var dsid = _remap_base(input, 'utv9rc7f2j35pqzmlgd8nswxhk1by046', 'XMT0123456789');
+        // if decrypted subId doesn't match "MT" then return the original subId;
+        if(dsid.indexOf("MT") != 0) return subId;
+	return dsid;
 };
 
 exports.encrypt_subid = function(input){

@@ -1,3 +1,27 @@
+var pg = require("pg");
+
+var dbHost = process.env['COMPANY_DB_HOST'] != null ? process.env['COMPANY_DB_HOST'] : 'localhost';
+var dbPort = parseInt(process.env['COMPANY_DB_PORT'] != null ? process.env['COMPANY_DB_PORT'] : 8530);
+
+// get company details given a list of mids
+exports.getCompanyDetailsLite = function (companyIDs, callback) {
+	//var dbConnectString = "tcp://manta_app:I%20am%20glad%20I%20use%20HADD.@rsdb1.rs.ecnext.net:5433/manta";
+	var dbConnectString = "tcp://manta_app:I%20am%20glad%20I%20use%20HADD.@" + dbHost + ":" + dbPort + "/manta";
+	console.log("company DB connection string is:", dbConnectString);
+	pg.connect(dbConnectString, function(err, client) {
+		var endpoints = {};
+		if (err) {
+			console.log("error", err);
+		}
+		// set up our params so we can use a prepared statement with an IN clause
+		var params = [];
+		for (var i = 1; i <= Object.keys(companyIDs).length; i++) {
+			params.push('$' + i);
+		}
+		client.query({name:'select mids ' + Object.keys(companyIDs).length, text:'SELECT mid, company_name, city, statebrv, zip, phones0_number, hide_address  FROM manta_claims_published WHERE mid IN (' + params.join(',') + ')', values: Object.keys(companyIDs)}, callback);
+	});
+}; 
+
 
 // Encrypt/decrypt manta company IDs 
 exports.decrypt_emid = function(input){
@@ -12,7 +36,7 @@ exports.decrypt_emid = function(input){
 	}
 };
 
-exports.encrypt_subid = function(input){
+exports.encrypt_mid = function(input){
 	if (input.length == 7) {
 		return input;  // already an emid
 	} else {
