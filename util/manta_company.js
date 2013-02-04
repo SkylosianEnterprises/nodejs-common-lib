@@ -3,25 +3,44 @@ var pg = require("pg");
 var dbHost = process.env['COMPANY_DB_HOST'] != null ? process.env['COMPANY_DB_HOST'] : 'localhost';
 var dbPort = parseInt(process.env['COMPANY_DB_PORT'] != null ? process.env['COMPANY_DB_PORT'] : 8530);
 
-// get company details given a list of mids
+// get minimal set of company details given a list of mids (returns an array of objects containing the details)
 exports.getCompanyDetailsLite = function (companyIDs, callback) {
 	//var dbConnectString = "tcp://manta_app:I%20am%20glad%20I%20use%20HADD.@rsdb1.rs.ecnext.net:5433/manta";
 	var dbConnectString = "tcp://manta_app:I%20am%20glad%20I%20use%20HADD.@" + dbHost + ":" + dbPort + "/manta";
-	console.log("company DB connection string is:", dbConnectString);
 	pg.connect(dbConnectString, function(err, client) {
 		var endpoints = {};
 		if (err) {
 			console.log("error", err);
 		}
 		// set up our params so we can use a prepared statement with an IN clause
-		var params = [];
-		for (var i = 1; i <= Object.keys(companyIDs).length; i++) {
-			params.push('$' + i);
+		var params1 = [];
+		for (var i = 1; i <= Object.keys(companyIDs).length * 2; i++) {
+			params1.push('$' + i);
 		}
-		client.query({name:'select mids ' + Object.keys(companyIDs).length, text:'SELECT mid, company_name, city, statebrv, zip, phones0_number, hide_address, id as approved_claim_id FROM manta_claims_published WHERE mid IN (' + params.join(',') + ')', values: Object.keys(companyIDs)}, callback);
+		var params2 = [];
+		for (var i = Object.keys(companyIDs).length + 1; i <= Object.keys(companyIDs).length * 2; i++) {
+			params2.push('$' + i);
+		}
+		var paramValues = Object.keys(companyIDs);
+		paramValues = paramValues.concat(Object.keys(companyIDs));
+
+		client.query({name:'select mids ' + Object.keys(companyIDs).length, text:'SELECT mid, name1 as company_name, city, stabrv as statebrv, zip5 as zip, phone as phones0_number, 0 as hide_address, \'b\' sortby FROM manta_contents_2 WHERE mid IN (' + params1.join(',') + ') UNION (SELECT  mid, company_name, city, statebrv, zip, phones0_number, hide_address, \'a\' sortby FROM manta_claims_published WHERE mid IN (' + params2.join(',') + ')) ORDER BY sortby', values: paramValues}, 
+		function(err, results) {
+			var deDupedRows = [];
+			var ids = [];
+			if (!err) {
+				// need to remove the duplicate if the record exists in both tables
+				results.rows.forEach(function(row) {
+					if (ids.indexOf(row.mid) == -1) {
+						deDupedRows.push(row);
+						ids.push(row.mid);
+					}
+				});
+			}
+			callback(err, deDupedRows);
+		});
 	});
 }; 
-
 
 // Encrypt/decrypt manta company IDs 
 exports.decrypt_emid = function(input){
