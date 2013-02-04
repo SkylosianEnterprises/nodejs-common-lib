@@ -24,6 +24,10 @@ exports.getCompanyDetailsLite = function (companyIDs, callback) {
 		var paramValues = Object.keys(companyIDs);
 		paramValues = paramValues.concat(Object.keys(companyIDs));
 
+		// do a union select from manta_contents_2 and manta_claims_published to find the data.  Some mids only exist in one or the other of the
+		// tables.  If data exists in the manta_claims_published, that takes precedence, so order by that table with the sortby field and only
+		// include the first result for a mid in our results that we pass back.  This isn't the greatest solution, but the thinking is that this
+		// query will be replaced by a call to the "company service" once one exists.
 		client.query({name:'select mids ' + Object.keys(companyIDs).length, text:'SELECT mid, name1 as company_name, city, stabrv as statebrv, zip5 as zip, phone as phones0_number, 0 as hide_address, \'b\' sortby FROM manta_contents_2 WHERE mid IN (' + params1.join(',') + ') UNION (SELECT  mid, company_name, city, statebrv, zip, phones0_number, hide_address, \'a\' sortby FROM manta_claims_published WHERE mid IN (' + params2.join(',') + ')) ORDER BY sortby', values: paramValues}, 
 		function(err, results) {
 			var deDupedRows = [];
