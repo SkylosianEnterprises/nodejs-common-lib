@@ -18,7 +18,7 @@ exports.getCompanyDetailsLite = function (companyIDs, callback) {
 		for (var i = 1; i <= Object.keys(companyIDs).length; i++) {
 			params.push('$' + i);
 		}
-		client.query({name:'select mids ' + Object.keys(companyIDs).length, text:'SELECT mid, company_name, city, statebrv, zip, phones0_number, hide_address  FROM manta_claims_published WHERE mid IN (' + params.join(',') + ')', values: Object.keys(companyIDs)}, callback);
+		client.query({name:'select mids ' + Object.keys(companyIDs).length, text:'SELECT mid, company_name, city, statebrv, zip, phones0_number, hide_address, id as approved_claim_id FROM manta_claims_published WHERE mid IN (' + params.join(',') + ')', values: Object.keys(companyIDs)}, callback);
 	});
 }; 
 
