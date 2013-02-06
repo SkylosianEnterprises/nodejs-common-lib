@@ -15,9 +15,9 @@ exports.getMemberDetails = function (memberIDs, callback) {
 		if (error) return callback(error);
 		try {
 			var memberDataObj = JSON.parse(body) 
-			callback(error, memberDataObj.data);
 		} 
 		catch (e) { callback(e) } 
+		callback(error, memberDataObj.data);
 	});
 };
 

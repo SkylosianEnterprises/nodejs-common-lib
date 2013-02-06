@@ -20,8 +20,14 @@ var connectSchema = mongoose.Schema(
 	, subType: { type: String, required: false }
 	, createdDate: { type: Date, required: true }
 	, updatedDate: { type: Date, required: true }
-	, createdBy: { type: String, required: true }
-	, updatedBy: { type: String, required: false }
+	, createdBy: 
+		{ type: { type: String, required: true }
+		, id: { type: String, required: true }
+		}
+	, updatedBy: 
+		{ type: { type: String, required: false }
+		, id: { type: String, required: false }
+		}
 	, attrs: { type: mongoose.Schema.Types.Mixed }
 	, reports: [ ReportSchema ]
 	, status: { type: String, required: false }
