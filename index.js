@@ -1,4 +1,4 @@
 exports.core = require('lib/core');
-exports.member-verifier = require('lib/jsmember-verifier.js');
+exports.member-verifier = require('lib/member-verifier.js');
 exports.verification = require('lib/verification');
 
