@@ -21,8 +21,8 @@ var connectSchema = mongoose.Schema(
 	, createdDate: { type: Date, required: true }
 	, updatedDate: { type: Date, required: true }
 	, createdBy: 
-		{ type: { type: String, required: true }
-		, id: { type: String, required: true }
+		{ type: { type: String, required: false }
+		, id: { type: String, required: false }
 		}
 	, updatedBy: 
 		{ type: { type: String, required: false }
