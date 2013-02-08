@@ -1,11 +1,11 @@
 var pg = require("pg");
 
 var claimedDBHost = process.env['COMPANY_DB_HOST'] != null ? process.env['COMPANY_DB_HOST'] : 'localhost';
-var claimedDBPort = parseInt(process.env['COMPANY_DB_PORT'] != null ? process.env['COMPANY_DB_PORT'] : 8530);
+var claimedDBPort = parseInt(process.env['COMPANY_DB_PORT'] != null ? process.env['COMPANY_DB_PORT'] : 5433);
 var claimedDBUser = process.env['COMPANY_DB_USER'] != null ? process.env['COMPANY_DB_USER'] : 'manta_app';
 var claimedDBPass = process.env['COMPANY_DB_PASS'] != null ? process.env['COMPANY_DB_PASS'] : 'I%20am%20glad%20I%20use%20HADD.';
 var unclaimedDBHost = process.env['UCOMPANY_DB_HOST'] != null ? process.env['UCOMPANY_DB_HOST'] : 'localhost';
-var unclaimedDBPort = parseInt(process.env['UCOMPANY_DB_PORT'] != null ? process.env['UCOMPANY_DB_PORT'] : 8530);
+var unclaimedDBPort = parseInt(process.env['UCOMPANY_DB_PORT'] != null ? process.env['UCOMPANY_DB_PORT'] : 5433);
 var unclaimedDBUser = process.env['UCOMPANY_DB_USER'] != null ? process.env['UCOMPANY_DB_USER'] : 'manta_app';
 var unclaimedDBPass = process.env['UCOMPANY_DB_PASS'] != null ? process.env['UCOMPANY_DB_PASS'] : 'I%20am%20glad%20I%20use%20HADD.';
 
