@@ -1,16 +1,30 @@
 var crypto = require('crypto');
 var request = require('request');
-
-var msHost = process.env['MEMBER_SVC_HOST'] != null ? process.env['MEMBER_SVC_HOST'] : 'localhost';
-var msPort = parseInt(process.env['MEMBER_SVC_PORT'] != null ? process.env['MEMBER_SVC_PORT'] : 8530);
+var url = require('url');
 
 var _secretKey = 'fu2u3@*s@I*Ig834TJJGS238*%@asdjflkasjdfAWIUHG23176wj2384htg@#$R%';
 var _salt = 'Brisket swine drumstick cow corned beef bacon. Tail spare ribs venison, brisket pork ham hock andouille meatball pork belly';
 
+// set configuration data
+exports.setConfigData = function (configdata) {
+	this.config = configdata;
+}
+
+exports.testMemberServiceConnectivity = function(cb) {
+	var that = this;
+	var memberURL = that.config.memberServiceQueryURL + JSON.stringify({"_id":"xxxxxx"});
+	request(memberURL, function(err, response, body) {
+		if (err) {
+			cb({error :"Error connecting to Member Service at " + url.parse(that.config.memberServiceQueryURL).host, details: err });
+		} else {
+			cb(null);	
+		}
+	});
+}
+
 // get member data for the specified list of IDs
 exports.getMemberDetails = function (memberIDs, callback) {
-	var memberURL = 'http://' + msHost + ':' + msPort + '/member/query?cond='+ JSON.stringify({"_id":{"$in": Object.keys(memberIDs) }});
-	console.log("memberURL is:", memberURL);
+	var memberURL = this.config.memberServiceQueryURL + JSON.stringify({"_id":{"$in": Object.keys(memberIDs) }});
 	request(memberURL, function(error, response, body) {
 		if (error) return callback(error);
 		try {

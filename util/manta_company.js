@@ -1,19 +1,31 @@
 var pg = require("pg");
+var url = require("url");
 
-var claimedDBHost = process.env['COMPANY_DB_HOST'] != null ? process.env['COMPANY_DB_HOST'] : 'localhost';
-var claimedDBPort = parseInt(process.env['COMPANY_DB_PORT'] != null ? process.env['COMPANY_DB_PORT'] : 5433);
-var claimedDBUser = process.env['COMPANY_DB_USER'] != null ? process.env['COMPANY_DB_USER'] : 'manta_app';
-var claimedDBPass = process.env['COMPANY_DB_PASS'] != null ? process.env['COMPANY_DB_PASS'] : 'I%20am%20glad%20I%20use%20HADD.';
-var unclaimedDBHost = process.env['UCOMPANY_DB_HOST'] != null ? process.env['UCOMPANY_DB_HOST'] : 'localhost';
-var unclaimedDBPort = parseInt(process.env['UCOMPANY_DB_PORT'] != null ? process.env['UCOMPANY_DB_PORT'] : 5433);
-var unclaimedDBUser = process.env['UCOMPANY_DB_USER'] != null ? process.env['UCOMPANY_DB_USER'] : 'manta_app';
-var unclaimedDBPass = process.env['UCOMPANY_DB_PASS'] != null ? process.env['UCOMPANY_DB_PASS'] : 'I%20am%20glad%20I%20use%20HADD.';
+// set configuration data
+exports.setConfigData = function (configdata) {
+	this.config = configdata;
+}
+
+exports.testDBConnectivity = function(cb) {
+	var that = this;
+	pg.connect(that.config.claimedDBConnectString, function(err, client) {
+		if (err) {
+			cb({error :"Error connecting to claimed company DB at " + url.parse(that.config.claimedDBConnectString).host, pgdetails: err });
+		} else {
+			pg.connect(that.config.unclaimedDBConnectString, function(err, client) {
+				if (err) {
+					cb({error :"Error connecting to unclaimed company DB at " + url.parse(that.config.unclaimedDBConnectString).host, pgdetails: err });
+				} else {
+					cb(null);
+				}
+			});
+		}
+	});
+}
 
 // get minimal set of company details given a list of mids (returns an array of objects containing the details)
 exports.getCompanyDetailsLite = function (companyIDs, callback) {
-	var claimedDBConnectString = "tcp://" + claimedDBUser + ":" + claimedDBPass + "@" + claimedDBHost + ":" + claimedDBPort + "/manta";
-	var unclaimedDBConnectString = "tcp://" + unclaimedDBUser + ":" + unclaimedDBPass + "@" + unclaimedDBHost + ":" + unclaimedDBPort + "/manta";
-	pg.connect(claimedDBConnectString, function(err, client) {
+	pg.connect(this.config.claimedDBConnectString, function(err, client) {
 		var endpoints = {};
 		if (err) {
 			console.log("error", err);
@@ -41,7 +53,7 @@ exports.getCompanyDetailsLite = function (companyIDs, callback) {
 						params2.push('$' + i);
 					}
 					// some IDs were not in the manta_claims_published, so look in manta_contents_2
-					pg.connect(claimedDBConnectString, function(err, client) {
+					pg.connect(this.config.unclaimedDBConnectString, function(err, client) {
 					client.query({name:'select unclaimed mids ' + params2.length, text:'SELECT mid, name1 as company_name, city, stabrv as statebrv, zip5 as zip, phone as phones0_number, 0 as hide_address FROM manta_contents_2 WHERE mid IN (' + params2.join(',') + ')', values: unclaimedIDs}, function(err, results) {
 							results.rows.forEach(function(row) {
 								finalResults.push(row);
@@ -57,7 +69,8 @@ exports.getCompanyDetailsLite = function (companyIDs, callback) {
 			}
 		});
 	});
-}; 
+};
+
 
 // Encrypt/decrypt manta company IDs 
 exports.decrypt_emid = function(input){
