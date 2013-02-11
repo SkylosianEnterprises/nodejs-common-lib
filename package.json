@@ -19,7 +19,7 @@
   ],
   "dependencies": {
     "async": "*",
-    "mongoose": "*"
+    "mongoose": "*",
 		"q": "*"
   },
   "devDependencies": {
