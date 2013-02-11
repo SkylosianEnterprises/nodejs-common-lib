@@ -1,16 +1,24 @@
 var crypto = require('crypto');
 var request = require('request');
 var url = require('url');
+var Q = require("q");
+
+var configDefer = Q.defer();
+var getConfig = configDefer.promise;
 
 var _secretKey = 'fu2u3@*s@I*Ig834TJJGS238*%@asdjflkasjdfAWIUHG23176wj2384htg@#$R%';
 var _salt = 'Brisket swine drumstick cow corned beef bacon. Tail spare ribs venison, brisket pork ham hock andouille meatball pork belly';
 
+var MantaMemberUtil = function (configdata) {
+	configDefer.resolve(configdata);
+}
+
 // set configuration data
-exports.setConfigData = function (configdata) {
+MantaMemberUtil.setConfigData = function (configdata) {
 	this.config = configdata;
 }
 
-exports.testMemberServiceConnectivity = function(cb) {
+MantaMemberUtil.testMemberServiceConnectivity = MantaMemberUtil.prototype.testMemberServiceConnectivity = function(cb) {
 	var that = this;
 	var memberURL = that.config.memberServiceQueryURL + JSON.stringify({"_id":"xxxxxx"});
 	request(memberURL, function(err, response, body) {
@@ -23,7 +31,7 @@ exports.testMemberServiceConnectivity = function(cb) {
 }
 
 // get member data for the specified list of IDs
-exports.getMemberDetails = function (memberIDs, callback) {
+MantaMemberUtil.getMemberDetails = MantaMemberUtil.prototype.getMemberDetails = function (memberIDs, callback) {
 	var memberURL = this.config.memberServiceQueryURL + JSON.stringify({"_id":{"$in": Object.keys(memberIDs) }});
 	request(memberURL, function(error, response, body) {
 		if (error) return callback(error);
@@ -36,7 +44,7 @@ exports.getMemberDetails = function (memberIDs, callback) {
 };
 
 // Hash password with the user id
-exports.hashPassword = function(password, userId){
+MantaMemberUtil.hashPassword = MantaMemberUtil.prototype.hashPassword = function(password, userId){
 	var data = password + '&' + _salt + '&' + userId; // Form a standard salted password string
 	var hmac = crypto.createHmac('sha1', _secretKey);
 	var hash = hmac.update(data); // hmac_sha1 the salted password string
@@ -45,7 +53,7 @@ exports.hashPassword = function(password, userId){
 }
 
 // Encrypt/decrypt manta Sub IDs
-exports.decrypt_subid = function(input){
+MantaMemberUtil.decrypt_subid = MantaMemberUtil.prototype.decrypt_subid = function(input){
         if (subId.indexOf("MT") != 0) return subId;
         if (subId.indexOf("_") != subId.length-1){
             subId = subId.substring(0, subId.length-1);
@@ -57,7 +65,7 @@ exports.decrypt_subid = function(input){
 	return dsid;
 };
 
-exports.encrypt_subid = function(input){
+MantaMemberUtil.encrypt_subid = MantaMemberUtil.prototype.encrypt_subid = function(input){
 	if (input.indexOf('MT') != 0) {
 		return input;
 	}
