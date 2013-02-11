@@ -5,7 +5,7 @@ var Q = require("q");
 var configDefer = Q.defer();
 var getConfig = configDefer.promise;
 
-var MantaCompanyUtil = function (config) {
+var MantaCompanyUtil = function (configdata) {
 	configDefer.resolve(configdata);
 }
 
@@ -16,27 +16,32 @@ MantaCompanyUtil.setConfigData = function (configdata) {
 
 MantaCompanyUtil.testDBConnectivity = MantaCompanyUtil.prototype.testDBConnectivity = function(cb) {
 	var that = this;
-	getConfig.then(function(config) {
-		pg.connect(config.claimedDBConnectString, function(err, client) {
+	getConfig.then(function(config) { config.get("claimedDBConnectString", function (err, claimedconnect) {
+		if (err) throw err;
+		pg.connect(claimedconnect, function(err, client) {
 			if (err) {
-				cb({error :"Error connecting to claimed company DB at " + url.parse(config.claimedDBConnectString).host, pgdetails: err });
+				cb({error :"Error connecting to claimed company DB at " + url.parse(claimedconnect).host, pgdetails: err });
 			} else {
-				pg.connect(config.unclaimedDBConnectString, function(err, client) {
-					if (err) {
-						cb({error :"Error connecting to unclaimed company DB at " + url.parse(config.unclaimedDBConnectString).host, pgdetails: err });
-					} else {
-						cb(null);
-					}
-				});
+				config.get("claimedDBConnectString", function (err, unclaimedconnect) {
+					if(err) throw err;
+					pg.connect(unclaimedconnect, function(err, client) {
+						if (err) {
+							cb({error :"Error connecting to unclaimed company DB at " + url.parse(unclaimedconnect).host, pgdetails: err });
+						} else {
+							cb(null);
+						}
+					});
+				} );
 			}
 		} );
-	} );
+	} ); } );
 }
 
 // get minimal set of company details given a list of mids (returns an array of objects containing the details)
 MantaCompanyUtil.getCompanyDetailsLite = MantaCompanyUtil.prototype.getCompanyDetailsLite = function (companyIDs, callback) {
-	getConfig.then( function(config) {
-		pg.connect(config.claimedDBConnectString, function(err, client) {
+	getConfig.then(function(config) { config.get("claimedDBConnectString", function (err, claimedconnect) {
+		if(err) throw err;
+		pg.connect(claimedconnect, function(err, client) {
 			var endpoints = {};
 			if (err) {
 				console.log("error", err);
@@ -64,14 +69,17 @@ MantaCompanyUtil.getCompanyDetailsLite = MantaCompanyUtil.prototype.getCompanyDe
 							params2.push('$' + i);
 						}
 						// some IDs were not in the manta_claims_published, so look in manta_contents_2
-						pg.connect(config.unclaimedDBConnectString, function(err, client) {
-						client.query({name:'select unclaimed mids ' + params2.length, text:'SELECT mid, name1 as company_name, city, stabrv as statebrv, zip5 as zip, phone as phones0_number, 0 as hide_address FROM manta_contents_2 WHERE mid IN (' + params2.join(',') + ')', values: unclaimedIDs}, function(err, results) {
-								results.rows.forEach(function(row) {
-									finalResults.push(row);
+						config.get("claimedDBConnectString", function (err, unclaimedconnect) {
+							if (err) throw err;
+							pg.connect(unclaimedconnect, function(err, client) {
+							client.query({name:'select unclaimed mids ' + params2.length, text:'SELECT mid, name1 as company_name, city, stabrv as statebrv, zip5 as zip, phone as phones0_number, 0 as hide_address FROM manta_contents_2 WHERE mid IN (' + params2.join(',') + ')', values: unclaimedIDs}, function(err, results) {
+									results.rows.forEach(function(row) {
+										finalResults.push(row);
+									});
+									callback(err, finalResults);
 								});
-								callback(err, finalResults);
 							});
-						});
+						} );
 					} else {
 						callback(err, finalResults);
 					}
@@ -80,7 +88,7 @@ MantaCompanyUtil.getCompanyDetailsLite = MantaCompanyUtil.prototype.getCompanyDe
 				}
 			});
 		});
-	});
+	} ); } );
 };
 
 
@@ -129,4 +137,6 @@ var _remap_base = function(code, from, to){
         return _express_base(val, to);
 };
 
-exports = MantaCompanyUtil;
+module.exports = MantaCompanyUtil;
+
+

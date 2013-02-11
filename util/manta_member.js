@@ -15,32 +15,37 @@ var MantaMemberUtil = function (configdata) {
 
 // set configuration data
 MantaMemberUtil.setConfigData = function (configdata) {
-	this.config = configdata;
+	configDefer.resolve(configdata);
 }
 
 MantaMemberUtil.testMemberServiceConnectivity = MantaMemberUtil.prototype.testMemberServiceConnectivity = function(cb) {
 	var that = this;
-	var memberURL = that.config.memberServiceQueryURL + JSON.stringify({"_id":"xxxxxx"});
-	request(memberURL, function(err, response, body) {
-		if (err) {
-			cb({error :"Error connecting to Member Service at " + url.parse(that.config.memberServiceQueryURL).host, details: err });
-		} else {
-			cb(null);	
-		}
-	});
+	getConfig.then(function(config) { config.get("memberServiceQueryURL", function (err, url) {
+		if(err) throw err;
+		request(url, function(err, response, body) {
+			if (err) {
+				cb({error :"Error connecting to Member Service at " + url.parse(url).host, details: err });
+			} else {
+				cb(null);	
+			}
+		} );
+	} ); } );
 }
 
 // get member data for the specified list of IDs
 MantaMemberUtil.getMemberDetails = MantaMemberUtil.prototype.getMemberDetails = function (memberIDs, callback) {
-	var memberURL = this.config.memberServiceQueryURL + JSON.stringify({"_id":{"$in": Object.keys(memberIDs) }});
-	request(memberURL, function(error, response, body) {
-		if (error) return callback(error);
-		try {
-			var memberDataObj = JSON.parse(body) 
-		} 
-		catch (e) { callback(e) } 
-		callback(error, memberDataObj.data);
-	});
+	getConfig.then( function ( config ) { config.get("memberServiceQueryURL", function (err, queryURL) {
+		if (err) throw err;
+		var memberURL = queryURL + JSON.stringify({"_id":{"$in": Object.keys(memberIDs) }});
+		request( memberURL, function(error, response, body) {
+			if (error) return callback(error);
+			try {
+				var memberDataObj = JSON.parse(body)
+			}
+			catch (e) { callback(e) }
+			callback(error, memberDataObj.data);
+		} );
+	} ); } );
 };
 
 // Hash password with the user id
@@ -93,3 +98,4 @@ var _remap_base = function(code, from, to){
 	return _express_base(val, to);
 };
 
+module.exports = MantaMemberUtil;
