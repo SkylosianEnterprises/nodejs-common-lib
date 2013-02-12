@@ -15,15 +15,6 @@ var MantaCompanyUtil = function (configdata) {
 
 	claimedDefer.resolve(new pg.Client(configdata.claimedDBConnectString));
 	unclaimedDefer.resolve(new pg.Client(configdata.unclaimedDBConnectString));
-//	pg.connect(configdata.claimedDBConnectString, function(err, client) {
-//		if (err) throw {error :"Error connecting to claimed company DB at " + url.parse(configdata.claimedDBConnectString).host, pgdetails: err };
-//		claimedDefer.resolve(client);
-//	} );
-//
-//	pg.connect(configdata.unclaimedDBConnectString, function(err, client) {
-//		if (err) throw {error :"Error connecting to unclaimed company DB at " + url.parse(configdata.claimedDBConnectString).host, pgdetails: err };
-//		unclaimedDefer.resolve(client);
-//	} );
 };
 MantaCompanyUtil.prototype = {};
 
