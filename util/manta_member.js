@@ -11,7 +11,6 @@ var _secretKey = 'fu2u3@*s@I*Ig834TJJGS238*%@asdjflkasjdfAWIUHG23176wj2384htg@#$
 var _salt = 'Brisket swine drumstick cow corned beef bacon. Tail spare ribs venison, brisket pork ham hock andouille meatball pork belly';
 
 var MantaMemberUtil = function (configdata) {
-	console.log("MEMBERUTIL CONSTRUCTOR", configdata);
 	configDefer.resolve(configdata);
 }
 MantaMemberUtil.prototype = {};
@@ -65,13 +64,11 @@ MantaMemberUtil.getMemberDetails = MantaMemberUtil.prototype.getMemberDetails = 
 						var memberDataObj = JSON.parse(body);
 					}
 					catch (e) { cb(e) }
-					console.log("getMemberDetails getting data for memberIDs of size: ", memberDataObj.data.length);
 					memberData = memberData.concat(memberDataObj.data);
 					cb(null);
 				});
 			}
 		, function(err) {
-			console.log("all have finished and memberData is now of size", memberData.length);
 			callback(err, memberData);
 		});
 
