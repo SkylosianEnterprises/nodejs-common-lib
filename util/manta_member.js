@@ -2,6 +2,7 @@ var crypto = require('crypto');
 var request = require('request');
 var url = require('url');
 var Q = require("q");
+var async = require("async");
 
 var configDefer = Q.defer();
 var getConfig = configDefer.promise;
@@ -10,8 +11,10 @@ var _secretKey = 'fu2u3@*s@I*Ig834TJJGS238*%@asdjflkasjdfAWIUHG23176wj2384htg@#$
 var _salt = 'Brisket swine drumstick cow corned beef bacon. Tail spare ribs venison, brisket pork ham hock andouille meatball pork belly';
 
 var MantaMemberUtil = function (configdata) {
+	console.log("MEMBERUTIL CONSTRUCTOR", configdata);
 	configDefer.resolve(configdata);
 }
+MantaMemberUtil.prototype = {};
 
 // set configuration data
 MantaMemberUtil.setConfigData = function (configdata) {
@@ -20,32 +23,59 @@ MantaMemberUtil.setConfigData = function (configdata) {
 
 MantaMemberUtil.testMemberServiceConnectivity = MantaMemberUtil.prototype.testMemberServiceConnectivity = function(cb) {
 	var that = this;
-	getConfig.then(function(config) { config.get("memberServiceQueryURL", function (err, url) {
-		if(err) throw err;
-		request(url, function(err, response, body) {
+	getConfig.then(function(config) {
+		request(config.memberServiceBaseUrl+'/health-check' , function(err, response, body) {
 			if (err) {
-				cb({error :"Error connecting to Member Service at " + url.parse(url).host, details: err });
+				cb({error :"Error connecting to Member Service at " + url.parse(config.memberServiceBaseUrl).host, details: err });
 			} else {
 				cb(null);	
 			}
 		} );
-	} ); } );
+	} );
 }
 
 // get member data for the specified list of IDs
 MantaMemberUtil.getMemberDetails = MantaMemberUtil.prototype.getMemberDetails = function (memberIDs, callback) {
-	getConfig.then( function ( config ) { config.get("memberServiceQueryURL", function (err, queryURL) {
-		if (err) throw err;
-		var memberURL = queryURL + JSON.stringify({"_id":{"$in": Object.keys(memberIDs) }});
-		request( memberURL, function(error, response, body) {
-			if (error) return callback(error);
-			try {
-				var memberDataObj = JSON.parse(body)
+	// member service caps us out at 500 per request, so split the calls up if need be
+	var memberIDsArr = Object.keys(memberIDs);
+	var numRemainingMemberIDs = memberIDsArr.length;
+	var memberURLChunks = [];
+	var lastIndex = 0;
+	var memberData = [];
+
+	getConfig.then( function ( config ) {
+		var memberURL = config.memberServiceQueryURL;
+
+		while (numRemainingMemberIDs > 0) {
+			if (numRemainingMemberIDs > 500) {
+				memberURLChunks.push(memberURL + JSON.stringify({"_id":{"$in": memberIDsArr.slice(lastIndex, lastIndex + 500) }}));
+				lastIndex += 500;
+				numRemainingMemberIDs -= 500;
+			} else {
+				memberURLChunks.push(memberURL + JSON.stringify({"_id":{"$in": memberIDsArr.slice(lastIndex) }}));
+				numRemainingMemberIDs = 0;
 			}
-			catch (e) { callback(e) }
-			callback(error, memberDataObj.data);
-		} );
-	} ); } );
+		}
+
+		async.each(memberURLChunks, 
+			function (myURL, cb) {
+				request( myURL, function(error, response, body) {
+					if (error) return cb(error);
+					try {
+						var memberDataObj = JSON.parse(body);
+					}
+					catch (e) { cb(e) }
+					console.log("getMemberDetails getting data for memberIDs of size: ", memberDataObj.data.length);
+					memberData = memberData.concat(memberDataObj.data);
+					cb(null);
+				});
+			}
+		, function(err) {
+			console.log("all have finished and memberData is now of size", memberData.length);
+			callback(err, memberData);
+		});
+
+	});
 };
 
 // Hash password with the user id
