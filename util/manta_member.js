@@ -30,7 +30,7 @@ MantaMemberUtil.testMemberServiceConnectivity = MantaMemberUtil.prototype.testMe
 				cb(null);	
 			}
 		} );
-	} );
+	} ).done();
 }
 
 // get member data for the specified list of IDs
@@ -72,7 +72,7 @@ MantaMemberUtil.getMemberDetails = MantaMemberUtil.prototype.getMemberDetails = 
 			callback(err, memberData);
 		});
 
-	});
+	}).done();
 };
 
 // Hash password with the user id

@@ -13,8 +13,8 @@ var MantaCompanyUtil = function (configdata) {
 	console.log("COMPANY CONSTRUCTOR", configdata);
 	configDefer.resolve(configdata);
 
-	getClaimed = { then: function (cb) { cb(new pg.Client(configdata.claimedDBConnectString)) } };
-	getUnclaimed = { then: function (cb) { cb(new pg.Client(configdata.claimedDBConnectString)) } };
+	getClaimed = { then: function (cb) { cb(new pg.Client(configdata.claimedDBConnectString)); return { done: function(){} } } };
+	getUnclaimed = { then: function (cb) { cb(new pg.Client(configdata.unclaimedDBConnectString)); return { done: function(){} } } };
 	//claimedDefer.resolve(new pg.Client(configdata.claimedDBConnectString));
 	//unclaimedDefer.resolve(new pg.Client(configdata.unclaimedDBConnectString));
 //	pg.connect(configdata.claimedDBConnectString, function(err, client) {
@@ -44,9 +44,9 @@ MantaCompanyUtil.testDBConnectivity = MantaCompanyUtil.prototype.testDBConnectiv
 					if(err) throw err;
 					cb(null);
 				} );
-			} );
+			} ).done();
 		} );
-	} );
+	} ).done();
 };
 
 // get minimal set of company details given a list of mids (returns an array of objects containing the details)
@@ -93,7 +93,7 @@ MantaCompanyUtil.getCompanyDetailsLite = MantaCompanyUtil.prototype.getCompanyDe
 				callback(err);
 			}
 		} );
-	} ); } );
+	} ); } ).done();
 };
 
 
