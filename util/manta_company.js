@@ -39,10 +39,12 @@ MantaCompanyUtil.testDBConnectivity = MantaCompanyUtil.prototype.testDBConnectiv
 	getClaimed.then( function(client) {
 		client.connect(function (err) {
 			if(err) throw err;
+			client.emit('drain');
 			getUnclaimed.then( function(client) {
 				client.connect(function(err) {
 					if(err) throw err;
 					cb(null);
+					client.emit('drain');
 				} );
 			} ).done();
 		} );
@@ -88,11 +90,13 @@ MantaCompanyUtil.getCompanyDetailsLite = MantaCompanyUtil.prototype.getCompanyDe
 							callback(err, Object.keys(finalResults).map(function(k){return finalResults[k]}));
 						}
 					);
+					client.emit('drain');
 				} ); } );
 			} else {
 				callback(err);
 			}
 		} );
+		client.emit('drain');
 	} ); } ).done();
 };
 
