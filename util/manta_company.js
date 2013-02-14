@@ -13,8 +13,8 @@ var MantaCompanyUtil = function (configdata) {
 	console.log("COMPANY CONSTRUCTOR", configdata);
 	configDefer.resolve(configdata);
 
-	getClaimed = { then: function (cb) { pg.connect(configdata.claimedDBConnectString, cb); return { done: function(){} } } };
-	getUnclaimed = { then: function (cb) { pg.connect(configdata.unclaimedDBConnectString, cb); return { done: function(){} } } };
+	getClaimed = { then: function (cb) { pg.connect(configdata.claimedDBConnectString, function(err, client) { if(err){throw err}cb(client); } ); return { done: function(){} } } };
+	getUnclaimed = { then: function (cb) { pg.connect(configdata.unclaimedDBConnectString, function(err, client) { if(err){throw err}cb(client); } ); return { done: function(){} } } };
 	//claimedDefer.resolve(new pg.Client(configdata.claimedDBConnectString));
 	//unclaimedDefer.resolve(new pg.Client(configdata.unclaimedDBConnectString));
 //	pg.connect(configdata.claimedDBConnectString, function(err, client) {
@@ -37,12 +37,10 @@ MantaCompanyUtil.setConfigData = function (configdata) {
 MantaCompanyUtil.testDBConnectivity = MantaCompanyUtil.prototype.testDBConnectivity = function(cb) {
 	var that = this;
 	try {
-		getClaimed.then( function(err, client) {
-			if(err) return cb(err);
+		getClaimed.then( function(client) {
 			client.query("SELECT NOW()", function(err, result) {
 				if (err) return cb(err);
-				getUnclaimed.then( function(err, client) {
-					if (err) return cb(err);
+				getUnclaimed.then( function(client) {
 					client.query("SELECT NOW()", function(err, result) {
 						if (err) return cb(err);
 						cb(null);
@@ -57,7 +55,7 @@ MantaCompanyUtil.testDBConnectivity = MantaCompanyUtil.prototype.testDBConnectiv
 
 // get minimal set of company details given a list of mids (returns an array of objects containing the details)
 MantaCompanyUtil.getCompanyDetailsLite = MantaCompanyUtil.prototype.getCompanyDetailsLite = function (companyIDs, callback) {
-	getClaimed.then(function(client) { client.connect( function (err) { if (err) throw err;
+	getClaimed.then(function(client) {
 		var endpoints = {};
 		// set up our params so we can use a prepared statement with an IN clause
 		var params1 = [];
@@ -82,7 +80,7 @@ MantaCompanyUtil.getCompanyDetailsLite = MantaCompanyUtil.prototype.getCompanyDe
 			}
 			// some IDs were not in the manta_claims_published, so look in manta_contents_2
 			if (params2.length > 0) {
-				getUnclaimed.then(function(client) { client.connect( function (err) { if (err) throw err;
+				getUnclaimed.then(function(client) {
 					client.query(
 						{ name: 'select unclaimed mids ' + params2.length
 						, text: 'SELECT mid, name1 as company_name, city, stabrv as statebrv, zip5 as zip, phone as phones0_number, 0 as hide_address FROM manta_contents_2 WHERE mid IN (' + params2.join(',') + ')'
@@ -94,14 +92,12 @@ MantaCompanyUtil.getCompanyDetailsLite = MantaCompanyUtil.prototype.getCompanyDe
 							callback(err, Object.keys(finalResults).map(function(k){return finalResults[k]}));
 						}
 					);
-					client.emit('drain');
-				} ); } );
+				} ).done();
 			} else {
 				callback(err);
 			}
 		} );
-		client.emit('drain');
-	} ); } ).done();
+	} ).done();
 };
 
 
