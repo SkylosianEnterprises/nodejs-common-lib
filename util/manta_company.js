@@ -13,8 +13,8 @@ var MantaCompanyUtil = function (configdata) {
 	console.log("COMPANY CONSTRUCTOR", configdata);
 	configDefer.resolve(configdata);
 
-	getClaimed = { then: function (cb) { cb(new pg.Client(configdata.claimedDBConnectString)); return { done: function(){} } } };
-	getUnclaimed = { then: function (cb) { cb(new pg.Client(configdata.unclaimedDBConnectString)); return { done: function(){} } } };
+	getClaimed = { then: function (cb) { pg.connect(configdata.claimedDBConnectString, cb); return { done: function(){} } } };
+	getUnclaimed = { then: function (cb) { pg.connect(configdata.unclaimedDBConnectString, cb); return { done: function(){} } } };
 	//claimedDefer.resolve(new pg.Client(configdata.claimedDBConnectString));
 	//unclaimedDefer.resolve(new pg.Client(configdata.unclaimedDBConnectString));
 //	pg.connect(configdata.claimedDBConnectString, function(err, client) {
@@ -36,19 +36,23 @@ MantaCompanyUtil.setConfigData = function (configdata) {
 
 MantaCompanyUtil.testDBConnectivity = MantaCompanyUtil.prototype.testDBConnectivity = function(cb) {
 	var that = this;
-	getClaimed.then( function(client) {
-		client.connect(function (err) {
-			if(err) throw err;
-			client.emit('drain');
-			getUnclaimed.then( function(client) {
-				client.connect(function(err) {
-					if(err) throw err;
-					cb(null);
-					client.emit('drain');
-				} );
-			} ).done();
-		} );
-	} ).done();
+	try {
+		getClaimed.then( function(err, client) {
+			if(err) return cb(err);
+			client.query("SELECT NOW()", function(err, result) {
+				if (err) return cb(err);
+				getUnclaimed.then( function(err, client) {
+					if (err) return cb(err);
+					client.query("SELECT NOW()", function(err, result) {
+						if (err) return cb(err);
+						cb(null);
+					} );
+				} ).done();
+			} );
+		} ).done();
+	} catch (e) {
+		cb(e);
+	}
 };
 
 // get minimal set of company details given a list of mids (returns an array of objects containing the details)

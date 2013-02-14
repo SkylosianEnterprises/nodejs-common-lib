@@ -22,15 +22,19 @@ MantaMemberUtil.setConfigData = function (configdata) {
 
 MantaMemberUtil.testMemberServiceConnectivity = MantaMemberUtil.prototype.testMemberServiceConnectivity = function(cb) {
 	var that = this;
-	getConfig.then(function(config) {
-		request(config.memberServiceBaseUrl+'/health-check' , function(err, response, body) {
-			if (err) {
-				cb({error :"Error connecting to Member Service at " + url.parse(config.memberServiceBaseUrl).host, details: err });
-			} else {
-				cb(null);	
-			}
-		} );
-	} ).done();
+	try {
+		getConfig.then(function(config) {
+			request(config.memberServiceBaseUrl+'/health-check' , function(err, response, body) {
+				if (err) {
+					cb({error :"Error connecting to Member Service at " + url.parse(config.memberServiceBaseUrl).host, details: err });
+				} else {
+					cb(null);	
+				}
+			} );
+		} ).done();
+	} catch (e) {
+		cb(e);
+	}
 }
 
 // get member data for the specified list of IDs
