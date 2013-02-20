@@ -3,7 +3,7 @@
   "description": "Manta common js code",
   "main": "index.js",
   "author": "Manta Media",
-  "version": "0.2.0-43",
+  "version": "0.2.0-57",
   "repository": {
     "type": "svn",
     "url": "http://github/mantacode/common-lib"
@@ -19,7 +19,10 @@
   ],
   "dependencies": {
     "async": "*",
-    "mongoose": "*"
+    "mongoose": "*",
+    "request": "*",
+    "pg": "*",
+		"q": "*"
   },
   "devDependencies": {
     "jasmine-node": "<= 1.0.22"

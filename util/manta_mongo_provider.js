@@ -1,7 +1,4 @@
 var mongoose = require('mongoose');
-var host = process.env['MONGO_NODE_DRIVER_HOST'] != null ? process.env['MONGO_NODE_DRIVER_HOST'] : 'localhost';
-var port = parseInt(process.env['MONGO_NODE_DRIVER_PORT'] != null ? process.env['MONGO_NODE_DRIVER_PORT'] : 27017);
-mongoose.connect('mongodb://'+host+':'+port+'/mstest');
 
 var ReportSchema = mongoose.Schema(
 // TODO @whomever fill this in
@@ -37,6 +34,14 @@ var Connection = mongoose.model( 'Connection', connectSchema, 'connections' );
 var Connection_Archive = mongoose.model( 'ConnectionArchive', connectSchema, 'connections_archive' );
 
 exports.builder = function(c, f) {
+
+	c.get('config', function(err, config) {
+		if (err) throw err;
+		config.get("connectionsDB", function (err, mongoURL) {
+			if(err) throw err;
+			mongoose.connect(mongoURL);
+		} );
+	} );
 
 	var conn = mongoose.connection;
 	// This error handler for connect errors returns to the caller, since there

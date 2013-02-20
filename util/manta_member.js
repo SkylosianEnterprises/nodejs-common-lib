@@ -1,28 +1,86 @@
 var crypto = require('crypto');
 var request = require('request');
+var url = require('url');
+var Q = require("q");
+var async = require("async");
 
-var msHost = process.env['MEMBER_SVC_HOST'] != null ? process.env['MEMBER_SVC_HOST'] : 'localhost';
-var msPort = parseInt(process.env['MEMBER_SVC_PORT'] != null ? process.env['MEMBER_SVC_PORT'] : 8530);
+var configDefer = Q.defer();
+var getConfig = configDefer.promise;
 
 var _secretKey = 'fu2u3@*s@I*Ig834TJJGS238*%@asdjflkasjdfAWIUHG23176wj2384htg@#$R%';
 var _salt = 'Brisket swine drumstick cow corned beef bacon. Tail spare ribs venison, brisket pork ham hock andouille meatball pork belly';
 
+var MantaMemberUtil = function (configdata) {
+	configDefer.resolve(configdata);
+}
+MantaMemberUtil.prototype = {};
+
+// set configuration data
+MantaMemberUtil.setConfigData = function (configdata) {
+	configDefer.resolve(configdata);
+}
+
+MantaMemberUtil.testMemberServiceConnectivity = MantaMemberUtil.prototype.testMemberServiceConnectivity = function(cb) {
+	var that = this;
+	try {
+		getConfig.then(function(config) {
+			request(config.memberServiceBaseUrl+'/health-check' , function(err, response, body) {
+				if (err) {
+					cb({error :"Error connecting to Member Service at " + url.parse(config.memberServiceBaseUrl).host, details: err });
+				} else {
+					cb(null);	
+				}
+			} );
+		} ).done();
+	} catch (e) {
+		cb(e);
+	}
+}
+
 // get member data for the specified list of IDs
-exports.getMemberDetails = function (memberIDs, callback) {
-	var memberURL = 'http://' + msHost + ':' + msPort + '/member/query?cond='+ JSON.stringify({"_id":{"$in": Object.keys(memberIDs) }});
-	console.log("memberURL is:", memberURL);
-	request(memberURL, function(error, response, body) {
-		if (error) return callback(error);
-		try {
-			var memberDataObj = JSON.parse(body) 
-		} 
-		catch (e) { callback(e) } 
-		callback(error, memberDataObj.data);
-	});
+MantaMemberUtil.getMemberDetails = MantaMemberUtil.prototype.getMemberDetails = function (memberIDs, callback) {
+	// member service caps us out at 500 per request, so split the calls up if need be
+	var memberIDsArr = Object.keys(memberIDs);
+	var numRemainingMemberIDs = memberIDsArr.length;
+	var memberURLChunks = [];
+	var lastIndex = 0;
+	var memberData = [];
+
+	getConfig.then( function ( config ) {
+		var memberURL = config.memberServiceQueryURL;
+
+		while (numRemainingMemberIDs > 0) {
+			if (numRemainingMemberIDs > 500) {
+				memberURLChunks.push(memberURL + JSON.stringify({"_id":{"$in": memberIDsArr.slice(lastIndex, lastIndex + 500) }}));
+				lastIndex += 500;
+				numRemainingMemberIDs -= 500;
+			} else {
+				memberURLChunks.push(memberURL + JSON.stringify({"_id":{"$in": memberIDsArr.slice(lastIndex) }}));
+				numRemainingMemberIDs = 0;
+			}
+		}
+
+		async.each(memberURLChunks, 
+			function (myURL, cb) {
+				request( myURL, function(error, response, body) {
+					if (error) return cb(error);
+					try {
+						var memberDataObj = JSON.parse(body);
+					}
+					catch (e) { cb(e) }
+					memberData = memberData.concat(memberDataObj.data);
+					cb(null);
+				});
+			}
+		, function(err) {
+			callback(err, memberData);
+		});
+
+	}).done();
 };
 
 // Hash password with the user id
-exports.hashPassword = function(password, userId){
+MantaMemberUtil.hashPassword = MantaMemberUtil.prototype.hashPassword = function(password, userId){
 	var data = password + '&' + _salt + '&' + userId; // Form a standard salted password string
 	var hmac = crypto.createHmac('sha1', _secretKey);
 	var hash = hmac.update(data); // hmac_sha1 the salted password string
@@ -31,7 +89,7 @@ exports.hashPassword = function(password, userId){
 }
 
 // Encrypt/decrypt manta Sub IDs
-exports.decrypt_subid = function(input){
+MantaMemberUtil.decrypt_subid = MantaMemberUtil.prototype.decrypt_subid = function(input){
         if (subId.indexOf("MT") != 0) return subId;
         if (subId.indexOf("_") != subId.length-1){
             subId = subId.substring(0, subId.length-1);
@@ -43,7 +101,7 @@ exports.decrypt_subid = function(input){
 	return dsid;
 };
 
-exports.encrypt_subid = function(input){
+MantaMemberUtil.encrypt_subid = MantaMemberUtil.prototype.encrypt_subid = function(input){
 	if (input.indexOf('MT') != 0) {
 		return input;
 	}
@@ -71,3 +129,4 @@ var _remap_base = function(code, from, to){
 	return _express_base(val, to);
 };
 
+module.exports = MantaMemberUtil;
