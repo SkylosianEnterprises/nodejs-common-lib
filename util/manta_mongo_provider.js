@@ -35,8 +35,10 @@ var Connection_Archive = mongoose.model( 'ConnectionArchive', connectSchema, 'co
 
 exports.builder = function(c, f) {
 
+	// this uses the provider_sys interface
 	c.get('config', function(err, config) {
 		if (err) throw err;
+		// this uses the nconf interface
 		config.get("connectionsDB", function (err, mongoURL) {
 			if(err) throw err;
 			mongoose.connect(mongoURL);
