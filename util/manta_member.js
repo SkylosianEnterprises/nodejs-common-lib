@@ -1,5 +1,5 @@
 var crypto = require('crypto');
-var request = require('request');
+var http = require('http');
 var url = require('url');
 var Q = require("q");
 var async = require("async");
@@ -15,22 +15,16 @@ var MantaMemberUtil = function (configdata) {
 }
 MantaMemberUtil.prototype = {};
 
-// set configuration data
-MantaMemberUtil.setConfigData = function (configdata) {
-	configDefer.resolve(configdata);
-}
-
-MantaMemberUtil.testMemberServiceConnectivity = MantaMemberUtil.prototype.testMemberServiceConnectivity = function(cb) {
-	var that = this;
+MantaMemberUtil.testConnectivity = MantaMemberUtil.prototype.testConnectivity = function(cb) {
+	var self = this;
 	try {
 		getConfig.then(function(config) {
-			request(config.memberServiceBaseUrl+'/health-check' , function(err, response, body) {
-				if (err) {
-					cb({error :"Error connecting to Member Service at " + url.parse(config.memberServiceBaseUrl).host, details: err });
-				} else {
-					cb(null);	
-				}
+			var req = http.request(config.memberServiceBaseUrl+'/health-check' , function(response) {
+				cb(null);
 			} );
+			req.on('error', function(err) {
+					cb({error :"Error connecting to Member Service at " + url.parse(config.memberServiceBaseUrl).host, details: err }); } );
+			req.end();
 		} ).done();
 	} catch (e) {
 		cb(e);
