@@ -2,6 +2,7 @@ var crypto = require('crypto');
 var http = require('http');
 var url = require('url');
 var Q = require("q");
+var request = require("request");
 var async = require("async");
 
 var configDefer = Q.defer();
@@ -20,6 +21,7 @@ MantaMemberUtil.testConnectivity = MantaMemberUtil.prototype.testConnectivity = 
 	try {
 		getConfig.then(function(config) {
 			var req = http.request(config.memberServiceBaseUrl+'/health-check' , function(response) {
+				if (response.statusCode != 200) return cb({error: "error with member service", code: response.statusCode});
 				cb(null);
 			} );
 			req.on('error', function(err) {
