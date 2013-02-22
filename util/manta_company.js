@@ -66,7 +66,9 @@ MantaCompanyUtil.getCompanyDetailsLite = MantaCompanyUtil.prototype.getCompanyDe
 				finalResults[row.mid] = row;
 			} );
 			var unclaimedIDs = paramValues.filter( function (id) {
-				return !(id in Object.keys(finalResults));
+				var keys = Object.keys(finalResults);
+				var test = keys.indexOf(id) == -1;
+				return test;
 			} );
 			var params2 = [];
 			for (var i=1; i <= unclaimedIDs.length; i++) {
@@ -89,7 +91,7 @@ MantaCompanyUtil.getCompanyDetailsLite = MantaCompanyUtil.prototype.getCompanyDe
 					);
 				} ).done();
 			} else {
-				callback(err);
+				callback(err, Object.keys(finalResults).map(function(k){return finalResults[k]}));
 			}
 		} );
 	} ).done();
