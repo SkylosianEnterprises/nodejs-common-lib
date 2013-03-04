@@ -99,7 +99,10 @@ MantaMemberUtil.decrypt_subid = MantaMemberUtil.prototype.decrypt_subid = functi
 
 MantaMemberUtil.encrypt_subid = MantaMemberUtil.prototype.encrypt_subid = function(input){
 	if (input.indexOf('MT') != 0) {
-		return input;
+		if (input.indexOf('_') == input.length-1) {
+			return input;
+		}
+		return input + '_';
 	}
 	return _remap_base(input, 'XMT0123456789', 'utv9rc7f2j35pqzmlgd8nswxhk1by046');
 };
