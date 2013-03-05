@@ -10,20 +10,8 @@ var Q = require("q");
 var MantaCompanyUtil = function (configdata) {
 	console.log("COMPANY CONSTRUCTOR", configdata);
 
-	getClaimed = { then: function (cb) { 
-		pg.connect(configdata.claimedDBConnectString, function(err, client) { 
-			if(err) throw err;
-			cb(client); 
-		} ); 
-		return { done: function(){} } } 
-	};
-	getUnclaimed = { then: function (cb) { 
-		pg.connect(configdata.unclaimedDBConnectString, function(err, client) {
-			if(err) throw err;
-			cb(client); 
-		} ); 
-		return { done: function(){} } } 
-	};
+	getClaimed = { then: function (cb) { pg.connect(configdata.claimedDBConnectString, function(err, client) { if(err){throw err}cb(client); } ); return { done: function(){} } } };
+	getUnclaimed = { then: function (cb) { pg.connect(configdata.unclaimedDBConnectString, function(err, client) { if(err){throw err}cb(client); } ); return { done: function(){} } } };
 };
 MantaCompanyUtil.prototype = {};
 
@@ -59,7 +47,7 @@ MantaCompanyUtil.getCompanyDetailsLite = MantaCompanyUtil.prototype.getCompanyDe
 		
 		// First look in manta_claims_processed to get the company info.  For any IDs we didn't find, try those from manta_contents_2
 		// This isn't the greatest solution, but the thinking is that this query will be replaced by a call to the "company service" once one exist.
-		client.query({name:'select claimed mids ' + params1.length, text: 'SELECT mid, company_name, city, statebrv, zip, iso_country_cd, phones0_number, hide_address FROM manta_claims_published WHERE mid IN (' + params1.join(',') + ')', values: paramValues}, function(err, results) {
+		client.query({name:'select claimed mids ' + params1.length, text: 'SELECT mid, company_name, city, statebrv, zip, iso_country_cd, phones0_number, hide_address, logo_filename FROM manta_claims_published WHERE mid IN (' + params1.join(',') + ')', values: paramValues}, function(err, results) {
 			if (err) return callback(err);
 			var finalResults = {};
 			results.rows.forEach( function (row) {
