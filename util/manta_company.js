@@ -107,6 +107,7 @@ MantaCompanyUtil.encrypt_mid = MantaCompanyUtil.prototype.encrypt_mid = function
 		while (emid.length < 7) {
 			emid = "m" + emid;
 		}
+		return emid;
 	}
 };
 
