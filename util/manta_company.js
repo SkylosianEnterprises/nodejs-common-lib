@@ -74,7 +74,27 @@ MantaCompanyUtil.getCompanyDetailsLite = MantaCompanyUtil.prototype.getCompanyDe
 							results.rows.forEach(function(row) {
 								finalResults[row.mid] = row;
 							} );
-							callback(err, Object.keys(finalResults).map(function(k){return finalResults[k]}));
+							var notfoundIDs = unclaimedIDs.filter( function (id) {
+								var keys = Object.keys(finalResults);
+								var test = keys.indexOf(id) == -1;
+								return test;
+							} );
+							if (notfoundIDs.length > 0) {
+								// any remaining unfound IDs might be in manta_claims_saved, so we'll look there next
+								var params3 = [];
+								for (var i=1; i <= notfoundIDs.length; i++) {
+									params3.push('$' + i);
+								}
+								client.query({name:'select saved mids ' + params3.length, text: 'SELECT mid, company_name, city, statebrv, zip, iso_country_cd, phones0_number, hide_address, logo_filename FROM manta_claims_saved WHERE mid IN (' + params3.join(',') + ')', values: notfoundIDs}, function(err, results) {
+									if (err) return callback(err);
+									results.rows.forEach( function (row) {
+										finalResults[row.mid] = row;
+									} );
+									callback(err, Object.keys(finalResults).map(function(k){return finalResults[k]}));
+								});
+							} else {
+								callback(err, Object.keys(finalResults).map(function(k){return finalResults[k]}));
+							}
 						}
 					);
 				} ).done();
