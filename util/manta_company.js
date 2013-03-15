@@ -10,19 +10,21 @@ var Q = require("q");
 var MantaCompanyUtil = function (configdata) {
 	console.log("COMPANY CONSTRUCTOR", configdata);
 
-	getClaimed = { then: function (cb) { pg.connect(configdata.claimedDBConnectString, function(err, client) { if(err){throw err}cb(client); } ); return { done: function(){} } } };
-	getUnclaimed = { then: function (cb) { pg.connect(configdata.unclaimedDBConnectString, function(err, client) { if(err){throw err}cb(client); } ); return { done: function(){} } } };
+	getClaimed = { then: function (cb) { pg.connect(configdata.claimedDBConnectString, function(err, client, done) { if(err){throw err}cb(client, done); } ); return { done: function(){} } } };
+	getUnclaimed = { then: function (cb) { pg.connect(configdata.unclaimedDBConnectString, function(err, client, done) { if(err){throw err}cb(client, done); } ); return { done: function(){} } } };
 };
 MantaCompanyUtil.prototype = {};
 
 MantaCompanyUtil.testConnectivity = MantaCompanyUtil.prototype.testConnectivity = function(cb) {
 	var that = this;
 	try {
-		getClaimed.then( function(client) {
+		getClaimed.then( function(client, done) {
 			client.query("SELECT NOW()", function(err, result) {
+				done();
 				if (err) return cb(err);
-				getUnclaimed.then( function(client) {
+				getUnclaimed.then( function(client, done) {
 					client.query("SELECT NOW()", function(err, result) {
+						done();
 						if (err) return cb(err);
 						cb(null);
 					} );
@@ -36,7 +38,7 @@ MantaCompanyUtil.testConnectivity = MantaCompanyUtil.prototype.testConnectivity 
 
 // get minimal set of company details given a list of mids (returns an array of objects containing the details)
 MantaCompanyUtil.getCompanyDetailsLite = MantaCompanyUtil.prototype.getCompanyDetailsLite = function (companyIDs, callback) {
-	getClaimed.then(function(client) {
+	getClaimed.then(function(client, done) {
 		var endpoints = {};
 		// set up our params so we can use a prepared statement with an IN clause
 		var params1 = [];
@@ -48,6 +50,7 @@ MantaCompanyUtil.getCompanyDetailsLite = MantaCompanyUtil.prototype.getCompanyDe
 		// First look in manta_claims_processed to get the company info.  For any IDs we didn't find, try those from manta_contents_2
 		// This isn't the greatest solution, but the thinking is that this query will be replaced by a call to the "company service" once one exist.
 		client.query({name:'select claimed mids ' + params1.length, text: 'SELECT mid, company_name, city, statebrv, zip, iso_country_cd, phones0_number, hide_address, logo_filename FROM manta_claims_published WHERE mid IN (' + params1.join(',') + ')', values: paramValues}, function(err, results) {
+			done();
 			if (err) return callback(err);
 			var finalResults = {};
 			results.rows.forEach( function (row) {
@@ -64,13 +67,16 @@ MantaCompanyUtil.getCompanyDetailsLite = MantaCompanyUtil.prototype.getCompanyDe
 			}
 			// some IDs were not in the manta_claims_published, so look in manta_contents_2
 			if (params2.length > 0) {
-				getUnclaimed.then(function(client) {
+				getUnclaimed.then(function(client,done) {
 					client.query(
 						{ name: 'select unclaimed mids ' + params2.length
 						, text: 'SELECT mid, name1 as company_name, city, stabrv as statebrv, zip5 as zip, iso_country_cd, phone as phones0_number, 0 as hide_address FROM manta_contents_2 WHERE mid IN (' + params2.join(',') + ')'
 						, values: unclaimedIDs
 						}, function(err, results) {
-							if (err) return callback(err);
+							if (err) {
+								done();
+								return callback(err);
+							}
 							results.rows.forEach(function(row) {
 								finalResults[row.mid] = row;
 							} );
@@ -86,6 +92,7 @@ MantaCompanyUtil.getCompanyDetailsLite = MantaCompanyUtil.prototype.getCompanyDe
 									params3.push('$' + i);
 								}
 								client.query({name:'select saved mids ' + params3.length, text: 'SELECT mid, company_name, city, statebrv, zip, iso_country_cd, phones0_number, hide_address, logo_filename FROM manta_claims_saved WHERE mid IN (' + params3.join(',') + ')', values: notfoundIDs}, function(err, results) {
+									done();
 									if (err) return callback(err);
 									results.rows.forEach( function (row) {
 										finalResults[row.mid] = row;
@@ -93,6 +100,7 @@ MantaCompanyUtil.getCompanyDetailsLite = MantaCompanyUtil.prototype.getCompanyDe
 									callback(err, Object.keys(finalResults).map(function(k){return finalResults[k]}));
 								});
 							} else {
+								done();
 								callback(err, Object.keys(finalResults).map(function(k){return finalResults[k]}));
 							}
 						}
