@@ -45,7 +45,6 @@ function MantaConnectionUtil (configdata) {
 
 
 	function setConnection () {
-		console.log(mongoose.connection);
 		mongoose.connect(configdata.mongoURL);
 		self.connection = mongoose.connection;
 	}
