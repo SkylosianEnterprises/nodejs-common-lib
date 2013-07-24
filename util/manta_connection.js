@@ -65,6 +65,11 @@ function MantaConnectionUtil (configdata) {
 			console.log("mongoose Error", err);
 			setConnection();
 		} );
+		self.connection.on( 'close', function (err) {
+			self.error = err;
+			console.log("mongoose Close", err);
+			setConnection();
+		});
 	} );
 	this.Connections = getConnections;
 	this.Connections_Archive = getArchive;
