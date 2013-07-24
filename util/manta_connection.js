@@ -60,16 +60,17 @@ function MantaConnectionUtil (configdata) {
 		// Since we have gotten an open, we remove the init handler and replace it
 		// with this error handler for subsequent errors
 		self.connection.removeListener('error', errinit);
-		self.connection.on( 'error', function (err) {
-			self.error = err;
-			console.log("mongoose Error", err);
-			setConnection();
-		} );
-		self.connection.on( 'close', function (err) {
-			self.error = err;
-			console.log("mongoose Close", err);
-			setConnection();
-		});
+
+		function handle ( name ) {
+			return function (err) {
+				self.error = err;
+				console.log("mongoose "+name, err);
+				setConnection();
+			}
+		}
+
+		self.connection.on( 'error', handle ('Error') );
+		self.connection.on( 'close', handle ('Close') );
 	} );
 	this.Connections = getConnections;
 	this.Connections_Archive = getArchive;
