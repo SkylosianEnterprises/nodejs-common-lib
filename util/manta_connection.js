@@ -45,9 +45,9 @@ function MantaConnectionUtil (configdata) {
 
 
 	function setConnection () {
+		console.log(mongoose.connection);
 		mongoose.connect(configdata.mongoURL);
 		self.connection = mongoose.connection;
-		console.log(self.connection.severConfig);
 	}
 
 	setConnection();
@@ -62,17 +62,16 @@ function MantaConnectionUtil (configdata) {
 		// with this error handler for subsequent errors
 		self.connection.removeListener('error', errinit);
 
-		function handle ( name, next ) {
+		function handle ( name) {
 			return function (err) {
 				self.error = err;
 				console.log("mongoose "+name, err);
-				if (next) next();
 				setConnection();
 			}
 		}
 
-		self.connection.on( 'error', handle ('Error', function () { console.log(self.connection.serverConfig); } ) );
-		self.connection.on( 'close', handle ('Close', function () { setConnection() }) );
+		self.connection.on( 'error', handle ('Error') );
+		self.connection.on( 'close', handle ('Close') );
 	} );
 	this.Connections = getConnections;
 	this.Connections_Archive = getArchive;
