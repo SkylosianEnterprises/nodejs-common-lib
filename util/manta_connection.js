@@ -43,10 +43,15 @@ function MantaConnectionUtil (configdata) {
 	var self = this;
 	console.log("CONNECTION CONSTRUCTOR", configdata);
 
-	mongoose.connect(configdata.mongoURL);
-	this.connection = mongoose.connection;
 
-	var errinit = function (err) { self.error = err; console.log("CONNECT ERROR", err); };
+	function setConnection () {
+		mongoose.connect(configdata.mongoURL);
+		self.connection = mongoose.connection;
+	}
+
+	setConnection();
+
+	var errinit = function (err) { self.error = err; throw("CONNECT ERROR", err);  };
 	this.connection.on('error', errinit);
 	this.connection.once('open', function () {
 		delete self.error;
@@ -55,10 +60,17 @@ function MantaConnectionUtil (configdata) {
 		// Since we have gotten an open, we remove the init handler and replace it
 		// with this error handler for subsequent errors
 		self.connection.removeListener('error', errinit);
-		self.connection.on( 'error', function (err) {
-			self.error = err;
-			throw("mongoose Error", err);
-		} );
+
+		function handle ( name) {
+			return function (err) {
+				self.error = err;
+				console.log("mongoose "+name, err);
+				setConnection();
+			}
+		}
+
+		self.connection.on( 'error', handle ('Error') );
+		self.connection.on( 'close', handle ('Close') );
 	} );
 	this.Connections = getConnections;
 	this.Connections_Archive = getArchive;
