@@ -43,10 +43,15 @@ function MantaConnectionUtil (configdata) {
 	var self = this;
 	console.log("CONNECTION CONSTRUCTOR", configdata);
 
-	mongoose.connect(configdata.mongoURL);
-	this.connection = mongoose.connection;
 
-	var errinit = function (err) { self.error = err; console.log("CONNECT ERROR", err); };
+	function setConnection () {
+		mongoose.connect(configdata.mongoURL);
+		self.connection = mongoose.connection;
+	}
+
+	setConnection();
+
+	var errinit = function (err) { self.error = err; throw("CONNECT ERROR", err);  };
 	this.connection.on('error', errinit);
 	this.connection.once('open', function () {
 		delete self.error;
@@ -57,7 +62,8 @@ function MantaConnectionUtil (configdata) {
 		self.connection.removeListener('error', errinit);
 		self.connection.on( 'error', function (err) {
 			self.error = err;
-			throw("mongoose Error", err);
+			console.log("mongoose Error", err);
+			setConnection();
 		} );
 	} );
 	this.Connections = getConnections;
